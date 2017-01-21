@@ -278,6 +278,19 @@ public:
 	bool empty() const{
 		return queue.empty();
 	}
+	
+	/// \brief Removes all of the messages in the ofThreadChannel that have not yet
+	/// been received.
+	///
+	/// This method locks the mutex and drops any pending values in the ofThreadChannel.
+	/// It is useful when another thread has changed your program state and you know that
+	/// the data on the channel is out of date and should be invalidated.
+	void flush(){
+		std::unique_lock<std::mutex> lock(mutex);
+		while(!queue.empty()){
+			queue.pop();
+		}
+	}
 
 private:
 	/// \brief The FIFO data queue.
