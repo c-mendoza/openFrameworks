@@ -1,14 +1,4 @@
 ###############################################################################
-#### NATIVE MACOS -> rPi CROSS-COMPILATION MOD
-# Version 0.2
-# Cristobal Mendoza
-# c@matadata.com
-# More info at:
-# https://gist.github.com/c-mendoza/6bf84b42ee1bdc094ebcf19fcf3904b8
-###############################################################################
-
-
-###############################################################################
 # CONFIGURE CORE PLATFORM MAKEFILE
 #   This file is where we make platform and architecture specific
 #   configurations. This file can be specified for a generic architecture or can
@@ -53,41 +43,8 @@ include $(OF_SHARED_MAKEFILES_PATH)/config.linux.common.mk
 #   Note: Leave a leading space when adding list items with the += operator
 ################################################################################
 
-# We detect Raspbian versions Stretch and newer above and enable legacy automatically for older versions
-# If detection fails comment USE_PI_LEGACY = 1 to use the newer system
-USE_PI_LEGACY = 1
-
-VER_ID = 0
-
-#if we have this file lets see if we are Stretch or Newer
-#then grab the Debian version ( 9 = Stretch, 10 = Buster )
-ifneq (,$(wildcard $(RPI_ROOT)/etc/os-release))
-	VER_ID = $(shell grep -oP '(?<=^VERSION_ID=).+' $(RPI_ROOT)/etc/os-release | tr -d '"')
-endif
-
-#check if we are newer than 8 and use the new system
-ifeq ($(shell expr $(VER_ID) \>= 9), 1)
-	USE_PI_LEGACY = 0
-endif
-
-$(info VER ID IS $(VER_ID))
-
 # defines used inside openFrameworks libs.
 PLATFORM_DEFINES += TARGET_RASPBERRY_PI
-
-ifeq ($(USE_PI_LEGACY), 1)
-	PLATFORM_DEFINES += TARGET_RASPBERRY_PI_LEGACY
-    $(info using legacy build)
-else
-	# comment this for older EGL windowing. Has no effect if USE_PI_LEGACY is enabled
-	# GLFW seems to provide a more robust window on newer Raspbian releases
-	USE_GLFW_WINDOW = 1
-    $(info using newer build and GLFW window)
-endif
-
-ifdef USE_GLFW_WINDOW
-	PLATFORM_DEFINES += TARGET_GLFW_WINDOW
-endif
 
 # TODO many of these are not relevant to openFrameworks (were just pasted from hello_pi examples)
 # from raspberry pi examples
@@ -162,19 +119,8 @@ PLATFORM_CFLAGS += -pipe
 #   Note: Leave a leading space when adding list items with the += operator
 ################################################################################
 
-ifdef USE_GLFW_WINDOW
-	PLATFORM_PKG_CONFIG_LIBRARIES += gl
-	PLATFORM_PKG_CONFIG_LIBRARIES += glu
-	PLATFORM_PKG_CONFIG_LIBRARIES += glew
-	PLATFORM_LIBRARIES += glfw
-endif
-
 # raspberry pi specific
-ifeq ($(USE_PI_LEGACY), 0)
-	PLATFORM_LIBRARIES += GLESv2
-	PLATFORM_LIBRARIES += GLESv1_CM
-	PLATFORM_LIBRARIES += EGL
-else ifneq (,$(wildcard $(RPI_ROOT)/opt/vc/lib/libGLESv2.so))
+ifneq (,$(wildcard $(RPI_ROOT)/opt/vc/lib/libGLESv2.so))
 	PLATFORM_LIBRARIES += GLESv2
 	PLATFORM_LIBRARIES += GLESv1_CM
 	PLATFORM_LIBRARIES += EGL
@@ -182,7 +128,6 @@ else
 	PLATFORM_LIBRARIES += brcmGLESv2
 	PLATFORM_LIBRARIES += brcmEGL
 endif
-
 PLATFORM_LIBRARIES += openmaxil
 PLATFORM_LIBRARIES += bcm_host
 PLATFORM_LIBRARIES += vcos
@@ -192,11 +137,9 @@ PLATFORM_LIBRARIES += rt
 PLATFORM_LIBRARIES += X11
 PLATFORM_LIBRARIES += dl
 
+
 PLATFORM_LDFLAGS += -pthread
 
-ifeq ($(USE_PI_LEGACY), 0)
-	PLATFORM_LDFLAGS += -latomic
-endif
 
 ################################################################################
 # PLATFORM HEADER SEARCH PATHS
@@ -243,11 +186,7 @@ PLATFORM_LIBRARY_SEARCH_PATHS += $(RPI_ROOT)/opt/vc/lib
 #   Note: Leave a leading space when adding list items with the += operator
 ################################################################################
 
-ifndef USE_GLFW_WINDOW
-	PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/openFrameworks/app/ofAppGLFWWindow.cpp
-else
-	PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/openFrameworks/app/ofAppEGLWindow.cpp
-endif
+PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/openFrameworks/app/ofAppGLFWWindow.cpp
 PLATFORM_CORE_EXCLUSIONS += $(OF_LIBS_PATH)/openFrameworks/sound/ofFmodSoundPlayer.cpp
 
 ifeq ($(CROSS_COMPILING),1)
@@ -266,34 +205,20 @@ endif
 		GCC_PREFIX = arm-linux-gnueabihf
 	endif
 
-	ifdef TOOLCHAIN_PREFIX
-
-	else
-		TOOLCHAIN_PREFIX = $(GCC_PREFIX)
-	endif
-
-	ifdef GCCVER
-
-	else
-		GCCVER = 4.9
-	endif
-
-	PLATFORM_CXX = $(TOOLCHAIN_ROOT)/bin/$(TOOLCHAIN_PREFIX)-g++
-	PLATFORM_CC = $(TOOLCHAIN_ROOT)/bin/$(TOOLCHAIN_PREFIX)-gcc
-	PLATFORM_AR = $(TOOLCHAIN_ROOT)/bin/$(TOOLCHAIN_PREFIX)-ar
-	PLATFORM_LD = $(TOOLCHAIN_ROOT)/bin/$(TOOLCHAIN_PREFIX)-ld
+	PLATFORM_CXX = $(TOOLCHAIN_ROOT)/bin/$(GCC_PREFIX)-g++
+	PLATFORM_CC = $(TOOLCHAIN_ROOT)/bin/$(GCC_PREFIX)-gcc
+	PLATFORM_AR = $(TOOLCHAIN_ROOT)/bin/$(GCC_PREFIX)-ar
+	PLATFORM_LD = $(TOOLCHAIN_ROOT)/bin/$(GCC_PREFIX)-ld
 
 	SYSROOT=$(RPI_ROOT)
 
 	PLATFORM_CFLAGS += --sysroot=$(SYSROOT)
 
-	PLATFORM_HEADER_SEARCH_PATHS += $(SYSROOT)/usr/include/c++/$(GCCVER)
-	PLATFORM_HEADER_SEARCH_PATHS += $(SYSROOT)/usr/include/$(GCC_PREFIX)/c++/$(GCCVER)
+	PLATFORM_HEADER_SEARCH_PATHS += $(SYSROOT)/usr/include/c++/4.9
+	PLATFORM_HEADER_SEARCH_PATHS += $(SYSROOT)/usr/include/$(GCC_PREFIX)/c++/4.9
 
 	PLATFORM_LIBRARY_SEARCH_PATHS += $(SYSROOT)/usr/lib/$(GCC_PREFIX)
-	PLATFORM_LIBRARY_SEARCH_PATHS += $(SYSROOT)/usr/lib/gcc/$(GCC_PREFIX)/$(GCCVER)
-	PLATFORM_LIBRARY_SEARCH_PATHS += $(SYSROOT)/lib/$(GCC_PREFIX)
-	PLATFORM_LIBRARY_SEARCH_PATHS += $(TOOLCHAIN_ROOT)/$(TOOLCHAIN_PREFIX)/sysroot/usr/lib
+	PLATFORM_LIBRARY_SEARCH_PATHS += $(SYSROOT)/usr/lib/gcc/$(GCC_PREFIX)/4.9
 
 	PLATFORM_LDFLAGS += --sysroot=$(SYSROOT)
 	PLATFORM_LDFLAGS += -Xlinker -rpath-link=$(SYSROOT)/usr/lib/$(GCC_PREFIX)
@@ -302,9 +227,5 @@ endif
 	PLATFORM_LDFLAGS += -Xlinker -rpath-link=$(SYSROOT)/usr/lib/arm-linux-gnueabihf/pulseaudio
 
 	PKG_CONFIG_LIBDIR=$(SYSROOT)/usr/lib/pkgconfig:$(SYSROOT)/usr/lib/$(GCC_PREFIX)/pkgconfig:$(SYSROOT)/usr/share/pkgconfig
-# $(info PLATFORM_CXX $(PLATFORM_CXX))
-CXX = $(PLATFORM_CXX)
-CC = $(PLATFORM_CC)
-AR = $(PLATFORM_AR)
-LD = $(PLATFORM_LD)
+
 endif

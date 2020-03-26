@@ -92,7 +92,7 @@ OF_CORE_LIBRARY_LDFLAGS += $(addprefix -L,$(PLATFORM_LIBRARY_SEARCH_PATHS))
 # DEBUG INFO
 ################################################################################
 ifdef MAKEFILE_DEBUG
-    $(info =============================configure.core.flags.make========================)
+    $(info -=============================configure.core.flags.make========================)
     $(info ---OF_CORE_LIBS_LDFLAGS---)
     $(foreach v, $(OF_CORE_LIBS_LDFLAGS),$(info $(v)))
 
@@ -103,7 +103,7 @@ endif
 ################################# ADDONS ######################################
 
 ifdef MAKEFILE_DEBUG
-    $(info ===================ADDONS================)
+    $(info -===================ADDONS================)
 endif
 
 # check to make sure OF_ROOT is defined
