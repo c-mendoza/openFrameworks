@@ -94,6 +94,8 @@ xcuserdata
 *.aps
 ipch/
 
+scripts/templates/vs
+
 # Eclipse
 .metadata
 local.properties
