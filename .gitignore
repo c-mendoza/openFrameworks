@@ -80,6 +80,7 @@ tests/**/*.yml
 # XCode 4
 xcuserdata
 *.xcworkspace
+DerivedData
 
 # Code::Blocks
 *.depend
