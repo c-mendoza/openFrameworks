@@ -65,6 +65,13 @@ if (APPLE)
             ${OF_DIRECTORY}/libs/openFrameworks/sound/ofAVEngineSoundPlayer.h
             ${OF_DIRECTORY}/libs/openFrameworks/sound/ofAVEngineSoundPlayer.mm
     )
+elseif (WIN32)
+    list(APPEND OF_SRC
+            ${OF_DIRECTORY}/libs/openFrameworks/video/ofDirectShowGrabber.cpp
+            ${OF_DIRECTORY}/libs/openFrameworks/video/ofDirectShowPlayer.cpp
+            ${OF_DIRECTORY}/libs/openFrameworks/video/ofMediaFoundationPlayer.cpp
+            ${OF_DIRECTORY}/libs/openFrameworks/sound/ofMediaFoundationSoundPlayer.cpp
+    )
 endif ()
 
 #foreach (item IN LISTS OF_SRC)
@@ -76,7 +83,8 @@ endif ()
 # --------------------------------------------------
 
 add_library(of_static STATIC ${OF_SRC})
-set_target_properties(of_static PROPERTIES OUTPUT_NAME openFrameworks)
+set_target_properties(of_static PROPERTIES OUTPUT_NAME "openframeworksLib$<$<CONFIG:Debug>:_debug>")
+
 
 # --------------------------------------------------
 # Includes
@@ -200,6 +208,58 @@ if (APPLE)
 
     target_link_libraries(of_static PUBLIC ${OF_FRAMEWORKS})
 
+elseif (WIN32)
+    set(OF_LIB_DIRS)
+    set(OF_LIB_FILES)
+    set(WIN_ARCH "x64")
+    list(APPEND OF_LIB_NAMES "videoInput")
+    include_directories(${OF_DIRECTORY}/libs/videoInput/include)
+    foreach (LIB ${OF_LIB_NAMES})
+        #        set(INCLUDE_DIR ${OF_DIRECTORY}/libs/${LIB}/include)
+        #        if (EXISTS ${INCLUDE_DIR})
+        #            list(APPEND OF_CORE_HEADERS ${INCLUDE_DIR})
+        #        endif ()
+        set(LIB_DIR ${OF_DIRECTORY}/libs/${LIB}/lib/vs/${WIN_ARCH})
+        file(GLOB LIB_FILES "${LIB_DIR}/*.lib")
+        target_link_libraries(of_static PUBLIC ${LIB_FILES})
+        #        list(APPEND OF_CORE_LIBS ${LIB_FILES})
+        #        list(APPEND OF_LIB_DIRS ${LIB_DIR})
+    endforeach ()
+
+    set(OF_WIN_SYSTEM_LIBS
+            msimg32
+            OpenGL32
+            kernel32
+            setupapi
+            Vfw32
+            comctl32
+            dsound
+            user32
+            gdi32
+            winspool
+            comdlg32
+            advapi32
+            shell32
+            ole32
+            oleaut32
+            uuid
+            #            glew32s
+            crypt32
+            #            libcurl
+            Ws2_32
+            winmm
+            odbc32
+            odbccp32
+            wldap32
+            mf
+            mfplat
+            mfuuid
+            d3d11
+            mfreadwrite
+            xaudio2
+            ucrt
+    )
+    target_link_libraries(of_static PUBLIC ${OF_WIN_SYSTEM_LIBS})
 endif ()
 
 #target_link_libraries(of_static PUBLIC ${OF_ADDON_FRAMEWORKS} ${OF_CORE_LIBS} ${OF_CORE_FRAMEWORKS})
@@ -217,6 +277,23 @@ if (APPLE)
     set(CMAKE_CXX_FLAGS "-std=c++17 -stdlib=libc++ -D__MACOSX_CORE__ -fobjc-arc") # Removed "-stdlib=libstdc++
     set_source_files_properties(${OF_SRC} PROPERTIES COMPILE_FLAGS "-x objective-c++")
     add_compile_options(-Wno-deprecated-declarations)
+elseif (WIN32)
+    #    set(CMAKE_CXX_FLAGS [=[/std:c++20 /std:c17 /MP /W3 /Zc:wchar_t /Zi /Gm- /Zc:inline /fp:precise /D "OF_NO_FMOD" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "POCO_STATIC" /D "CAIRO_WIN32_STATIC_BUILD" /D "DISABLE_SOME_FLOATING_POINT" /D "CURL_STATICLIB" /D "_UNICODE" /D "UNICODE" /MDd]=])
+    set(CMAKE_C_FLAGS "/std:c17")
+    target_compile_definitions(of_static PUBLIC WIN32 CURL_STATICLIB FREEIMAGE_LIB URI_STATIC_BUILD _HAS_STREAM_INSERTION_OPERATORS_DELETED_IN_CXX20 _CONSOLE POCO_STATIC CAIRO_WIN32_STATIC_BUILD DISABLE_SOME_FLOATING_POINT OF_NO_FMOD GLM_FORCE_CTOR_INIT GLM_ENABLE_EXPERIMENTAL _UNICODE UNICODE)
+    set_target_properties(of_static PROPERTIES
+            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+    )
+    target_compile_options(of_static PUBLIC
+            $<$<CONFIG:Debug>:/Od>
+            $<$<CONFIG:Release>:/O2>
+
+            /WX- /Zc:forScope /Gd /std:c++20 /FC /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise)
+    #    set(CMAKE_CXX_FLAGS [=[ /WX- /Zc:forScope /Gd /std:c++20 /FC  /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise /D  ]=])
+#    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    #/DEBUG
+    target_link_options(of_static PUBLIC /DYNAMICBASE /MACHINE:X64 /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:MSVCRT /NODEFAULTLIB:libcmt /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /INCREMENTAL /SUBSYSTEM:CONSOLE /NOLOGO)
+
 endif ()
 
 
