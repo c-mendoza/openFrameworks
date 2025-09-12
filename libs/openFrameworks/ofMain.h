@@ -35,8 +35,8 @@
 //--------------------------
 // communication
 #if !defined(TARGET_OF_IOS) & !defined(TARGET_ANDROID) & !defined(TARGET_EMSCRIPTEN)
-    #include "ofSerial.h"
-    #include "ofArduino.h"
+	#include "ofArduino.h"
+	#include "ofSerial.h"
 #endif
 
 //--------------------------
@@ -59,8 +59,8 @@
 //--------------------------
 // graphics
 #if !defined(TARGET_OF_IOS) & !defined(TARGET_ANDROID) & !defined(TARGET_EMSCRIPTEN)
-    #include "ofCairoRenderer.h"
-    #include "ofGraphicsCairo.h"
+	#include "ofCairoRenderer.h"
+	#include "ofGraphicsCairo.h"
 #endif
 #include "ofGraphics.h"
 #include "ofImage.h"
@@ -79,7 +79,7 @@
 #include "ofMainLoop.h"
 #include "ofWindowSettings.h"
 #if !defined(TARGET_OF_IOS) & !defined(TARGET_ANDROID) & !defined(TARGET_EMSCRIPTEN) & !defined(TARGET_RASPBERRY_PI_LEGACY)
-    #include "ofAppGLFWWindow.h"
+	#include "ofAppGLFWWindow.h"
 //    #if !defined(TARGET_LINUX_ARM)
 //        #include "ofAppGlutWindow.h"
 //    #endif
@@ -88,9 +88,9 @@
 //--------------------------
 // audio
 #ifndef TARGET_NO_SOUND
-    #include "ofSoundStream.h"
-    #include "ofSoundPlayer.h"
-    #include "ofSoundBuffer.h"
+	#include "ofSoundBuffer.h"
+	#include "ofSoundPlayer.h"
+	#include "ofSoundStream.h"
 #endif
 
 //--------------------------
@@ -115,9 +115,9 @@
 using namespace std;
 #else
 
-// this will eventually be disabled by default
-#define OF_USE_MINIMAL_STD
-    #ifdef OF_USE_MINIMAL_STD
+	// this will eventually be disabled by default
+	#define OF_USE_MINIMAL_STD
+	#ifdef OF_USE_MINIMAL_STD
 using std::cout;
 using std::deque;
 using std::endl;
@@ -132,5 +132,5 @@ using std::swap;
 using std::to_string;
 using std::vector;
 using std::weak_ptr;
-    #endif
+	#endif
 #endif

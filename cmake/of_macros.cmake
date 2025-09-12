@@ -194,7 +194,6 @@ macro(of_app APP_NAME SOURCE_FILES)
     if (APPLE)
 #        message(STATUS "${SOURCE_FILES}")
         add_executable(${APP_NAME} MACOSX_BUNDLE "${SOURCE_FILES}")
-
         #configure_file(
         #        "${CMAKE_SOURCE_DIR}/openFrameworks-Info.plist.in"
         #        "${CMAKE_SOURCE_DIR}/Info.plist"
@@ -221,7 +220,6 @@ macro(of_app APP_NAME SOURCE_FILES)
 #                ${OF_CORE_FRAMEWORKS}
 #                ${USER_LIBS}
 #                ${OF_ADDONS}
-        target_link_libraries(${APP_NAME} PRIVATE of_static)
 
 #        add_custom_command(
 #                TARGET ${APP_NAME}
@@ -237,15 +235,21 @@ macro(of_app APP_NAME SOURCE_FILES)
 #                ARGS -change @executable_path/libfmod.dylib @executable_path/../Frameworks/libfmod.dylib $<TARGET_FILE:${APP_NAME}>
 #        )
 
+    elseif (WIN32)
+        add_executable(${APP_NAME} "${SOURCE_FILES}")
+        target_compile_options(${APP_NAME} PUBLIC -U__MINGW64__ -U__MINGW32__)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+        target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE /MACHINE:X64 /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:MSVCRT /NODEFAULTLIB:libcmt /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /INCREMENTAL  /SUBSYSTEM:CONSOLE /NOLOGO )
     endif ()
 
-    set(OUTPUT_APP_NAME ${APP_NAME})
+    target_link_libraries(${APP_NAME} PRIVATE of_static)
 
     # Add all addons as dependencies
 #    if (OF_ADDONS)
 #        add_dependencies( ${APP_NAME} ${OF_ADDONS} )
 #    endif ()
 
+    set(OUTPUT_APP_NAME ${APP_NAME})
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         set(OUTPUT_APP_NAME "${APP_NAME}_debug")
     endif ()
