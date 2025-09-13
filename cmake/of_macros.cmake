@@ -152,7 +152,7 @@ endmacro(of_find_source_files)
 
 function(of_add_xcframework_lib TARGET LIB_DIR_NAME)
     # Pick the right slice depending on platform
-    set (XCF_PATH "${OF_DIRECTORY}/libs/${LIB_DIR_NAME}/lib/macos/${LIB_DIR_NAME}.xcframework")
+    set(XCF_PATH "${OF_DIRECTORY}/libs/${LIB_DIR_NAME}/lib/macos/${LIB_DIR_NAME}.xcframework")
     if (CMAKE_SYSTEM_NAME STREQUAL "iOS")
         if (CMAKE_OSX_ARCHITECTURES MATCHES "x86_64|arm64" AND CMAKE_OSX_SYSROOT MATCHES ".*Simulator")
             # iOS Simulator
@@ -172,17 +172,17 @@ function(of_add_xcframework_lib TARGET LIB_DIR_NAME)
 
     target_link_libraries(${TARGET} PUBLIC ${LIB_FILES})
 
-#   if (EXISTS "${LIB_DIR}/${LIB_NAME}.a")
-#       set(LIB_PATH "${LIB_DIR}/${LIB_NAME}.a")
-#   else ()
-#       set(LIB_PATH "${LIB_DIR}/lib${LIB_NAME}.a")
-#   endif ()
-#
-#   if (EXISTS ${LIB_PATH})
-#       target_link_libraries(${TARGET} PUBLIC ${LIB_PATH})
-#   else ()
-#       message(FATAL_ERROR "Could not find library ${LIB_NAME} in ${LIB_PATH}")
-#   endif ()
+    #   if (EXISTS "${LIB_DIR}/${LIB_NAME}.a")
+    #       set(LIB_PATH "${LIB_DIR}/${LIB_NAME}.a")
+    #   else ()
+    #       set(LIB_PATH "${LIB_DIR}/lib${LIB_NAME}.a")
+    #   endif ()
+    #
+    #   if (EXISTS ${LIB_PATH})
+    #       target_link_libraries(${TARGET} PUBLIC ${LIB_PATH})
+    #   else ()
+    #       message(FATAL_ERROR "Could not find library ${LIB_NAME} in ${LIB_PATH}")
+    #   endif ()
 
 endfunction(of_add_xcframework_lib)
 
@@ -192,7 +192,7 @@ set(MACOS_BUNDLE_ID "com.example.one")
 macro(of_app APP_NAME SOURCE_FILES)
     set(OF_APP_NAME ${APP_NAME})
     if (APPLE)
-#        message(STATUS "${SOURCE_FILES}")
+        #        message(STATUS "${SOURCE_FILES}")
         add_executable(${APP_NAME} MACOSX_BUNDLE "${SOURCE_FILES}")
         #configure_file(
         #        "${CMAKE_SOURCE_DIR}/openFrameworks-Info.plist.in"
@@ -213,41 +213,50 @@ macro(of_app APP_NAME SOURCE_FILES)
         #        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/Info.plist"
         #)
 
-#        target_link_libraries(${APP_NAME}
-#                ${OF_CORE_LIBS}
-#                of_static
-#                #        ${opengl_lib}
-#                ${OF_CORE_FRAMEWORKS}
-#                ${USER_LIBS}
-#                ${OF_ADDONS}
+        #        target_link_libraries(${APP_NAME}
+        #                ${OF_CORE_LIBS}
+        #                of_static
+        #                #        ${opengl_lib}
+        #                ${OF_CORE_FRAMEWORKS}
+        #                ${USER_LIBS}
+        #                ${OF_ADDONS}
 
-#        add_custom_command(
-#                TARGET ${APP_NAME}
-#                POST_BUILD
-#                COMMAND rsync
-#                ARGS -aved ${OF_ROOT}/libs/fmod/lib/osx/libfmod.dylib "$<TARGET_FILE_DIR:${APP_NAME}>/../Frameworks/"
-#        )
-#
-#        add_custom_command(
-#                TARGET ${APP_NAME}
-#                POST_BUILD
-#                COMMAND ${CMAKE_INSTALL_NAME_TOOL}
-#                ARGS -change @executable_path/libfmod.dylib @executable_path/../Frameworks/libfmod.dylib $<TARGET_FILE:${APP_NAME}>
-#        )
+        #        add_custom_command(
+        #                TARGET ${APP_NAME}
+        #                POST_BUILD
+        #                COMMAND rsync
+        #                ARGS -aved ${OF_ROOT}/libs/fmod/lib/osx/libfmod.dylib "$<TARGET_FILE_DIR:${APP_NAME}>/../Frameworks/"
+        #        )
+        #
+        #        add_custom_command(
+        #                TARGET ${APP_NAME}
+        #                POST_BUILD
+        #                COMMAND ${CMAKE_INSTALL_NAME_TOOL}
+        #                ARGS -change @executable_path/libfmod.dylib @executable_path/../Frameworks/libfmod.dylib $<TARGET_FILE:${APP_NAME}>
+        #        )
 
     elseif (WIN32)
         add_executable(${APP_NAME} "${SOURCE_FILES}")
-        target_compile_options(${APP_NAME} PUBLIC -U__MINGW64__ -U__MINGW32__)
+        target_compile_options(${APP_NAME} PUBLIC
+                $<$<CONFIG:Debug>:/Od>
+                $<$<CONFIG:Release>:/O2>
+                -U__MINGW64__
+                -U__MINGW32__)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-        target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE /MACHINE:X64 /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:MSVCRT /NODEFAULTLIB:libcmt /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /INCREMENTAL  /SUBSYSTEM:CONSOLE /NOLOGO )
+        #        target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE /MACHINE:X64 /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:MSVCRT /NODEFAULTLIB:libcmt /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /INCREMENTAL  /SUBSYSTEM:CONSOLE /NOLOGO )
+        if (CMAKE_BUILD_TYPE MATCHES "Debug")
+            target_link_options(${APP_NAME} PUBLIC /DEBUG /MACHINE:X64 /NODEFAULTLIB:"atlthunk.lib" /NODEFAULTLIB:"msvcrt" /NODEFAULTLIB:"libcmt" /NODEFAULTLIB:"LIBC" /NODEFAULTLIB:"LIBCMTD" /INCREMENTAL)
+        else ()
+            target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE:NO /MACHINE:X64 /INCREMENTAL /SUBSYSTEM:CONSOLE /NOLOGO)
+        endif ()
     endif ()
 
-    target_link_libraries(${APP_NAME} PRIVATE of_static)
+    target_link_libraries(${APP_NAME} PUBLIC of_static)
 
     # Add all addons as dependencies
-#    if (OF_ADDONS)
-#        add_dependencies( ${APP_NAME} ${OF_ADDONS} )
-#    endif ()
+    #    if (OF_ADDONS)
+    #        add_dependencies( ${APP_NAME} ${OF_ADDONS} )
+    #    endif ()
 
     set(OUTPUT_APP_NAME ${APP_NAME})
     if (CMAKE_BUILD_TYPE MATCHES Debug)
@@ -266,3 +275,31 @@ function(of_print_list LIST)
         message(STATUS ${ITEM})
     endforeach ()
 endfunction()
+
+function(of_get_subdir_names result_var dir)
+    # Get all children of dir
+    file(GLOB children RELATIVE "${dir}" "${dir}/*")
+
+    set(subdirs "")
+    foreach (child ${children})
+        if (IS_DIRECTORY "${dir}/${child}")
+            list(APPEND subdirs "${child}")
+        endif ()
+    endforeach ()
+
+    # Return result to caller scope
+    set(${result_var} "${subdirs}" PARENT_SCOPE)
+endfunction()
+
+function(of_remove_debug_libs result_var the_list)
+    set(filtered_list "")
+    foreach (item IN LISTS the_list)
+        get_filename_component(name "${item}" NAME) # e.g. libD.lib
+        #        message(STATUS ${name})
+        if (NOT name MATCHES "D.lib")
+            list(APPEND filtered_list "${item}")
+        endif ()
+    endforeach ()
+    set(${result_var} "${filtered_list}" PARENT_SCOPE)
+endfunction()
+

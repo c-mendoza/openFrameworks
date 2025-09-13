@@ -1,5 +1,5 @@
 ## openFrameworks
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.28)
 
 project(openFrameworks)
 set(OF_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
@@ -113,6 +113,11 @@ set(OF_LIB_NAMES
         zlib
 )
 
+#set(OF_LIB_NAMES)
+#of_get_subdir_names(OF_LIB_NAMES ${OF_DIRECTORY}/libs)
+#list(REMOVE_ITEM OF_LIB_NAMES download openFrameworks openFrameworksCompiled)
+#list(REMOVE_ITEM OF_LIB_NAMES "download")
+
 set(OF_HEADERS
         ${OF_DIRECTORY}/libs/openFrameworks/
         ${OF_DIRECTORY}/libs/openFrameworks/3d
@@ -158,7 +163,9 @@ include_directories(${OF_HEADERS})
 
 if (APPLE)
     foreach (ITEM ${OF_LIB_NAMES})
-        of_add_xcframework_lib(of_static ${ITEM})
+        #        of_add_xcframework_lib(of_static ${ITEM})
+        set(XCF_PATH "${OF_DIRECTORY}/libs/${ITEM}/lib/macos/${ITEM}.xcframework")
+        target_link_libraries(of_static PUBLIC ${XCF_PATH})
     endforeach ()
 
 
@@ -210,22 +217,67 @@ if (APPLE)
 
 elseif (WIN32)
     set(OF_LIB_DIRS)
-    set(OF_LIB_FILES)
+    set(OF_LIB_FILES
+            brotlicommon.lib
+            brotlidec.lib
+            brotlienc.lib
+            libcairo.lib
+            libcurl.lib
+            fmt.lib
+            FreeImage$<$<CONFIG:Debug>:D>.lib
+            freetype$<$<CONFIG:Debug>:d>.lib
+            libglew32.lib
+            glfw3.lib
+            libpng.lib
+            libcrypto.lib
+            libssl.lib
+            libpixman-1.lib
+            pugixml$<$<CONFIG:Debug>:D>.lib
+            rtaudio$<$<CONFIG:Debug>:D>.lib
+            tess2.lib
+            uriparser.lib
+            videoInput$<$<CONFIG:Debug>:D>.lib
+            zlib.lib
+    )
+
+    #    message(STATUS ${OF_LIB_FILES})
     set(WIN_ARCH "x64")
     list(APPEND OF_LIB_NAMES "videoInput")
     include_directories(${OF_DIRECTORY}/libs/videoInput/include)
-    foreach (LIB ${OF_LIB_NAMES})
-        #        set(INCLUDE_DIR ${OF_DIRECTORY}/libs/${LIB}/include)
-        #        if (EXISTS ${INCLUDE_DIR})
-        #            list(APPEND OF_CORE_HEADERS ${INCLUDE_DIR})
-        #        endif ()
-        set(LIB_DIR ${OF_DIRECTORY}/libs/${LIB}/lib/vs/${WIN_ARCH})
-        file(GLOB LIB_FILES "${LIB_DIR}/*.lib")
-        target_link_libraries(of_static PUBLIC ${LIB_FILES})
-        #        list(APPEND OF_CORE_LIBS ${LIB_FILES})
-        #        list(APPEND OF_LIB_DIRS ${LIB_DIR})
-    endforeach ()
 
+
+    set(FOUND_LIBS)
+    foreach (LIB ${OF_LIB_NAMES})
+        set(LIB_DIR "${OF_DIRECTORY}/libs/${LIB}/lib/vs/${WIN_ARCH}")
+        list(APPEND OF_LIB_DIRS ${LIB_DIR})
+    endforeach ()
+    target_link_directories(of_static PUBLIC ${OF_LIB_DIRS})
+
+    target_link_libraries(of_static PUBLIC ${OF_LIB_FILES})
+    #
+    #        message(STATUS "Searching for ${LIB} in ${LIB_DIR}")
+    #
+    #        find_library(found_lib_${LIB} NAMES ${LIB} PATHS ${LIB_DIR} NO_DEFAULT_PATH)
+    #
+    #        if (found_lib)
+    #            message(STATUS "Found: ${found_lib_${LIB}}")
+    #            list(APPEND FOUND_LIBS ${found_lib_${LIB}})
+    #        else ()
+    #            message(WARNING "Library ${LIB} not found in ${LIB_DIR}")
+    #        endif ()
+
+
+    #        set(LIB_DIR ${OF_DIRECTORY}/libs/${LIB}/lib/vs/${WIN_ARCH})
+    #        file(GLOB LIB_FILES "${LIB_DIR}/*.lib")
+    #        list(LENGTH LIB_FILES len)
+    #        if (len GREATER 0)
+    #            of_remove_debug_libs(LIB_FILES_NO_D "${LIB_FILES}")
+    #            target_link_libraries(of_static PUBLIC ${LIB_FILES_NO_D})
+    #        endif ()
+
+    #    endforeach ()
+
+    message(STATUS ${FOUND_LIBS})
     set(OF_WIN_SYSTEM_LIBS
             msimg32
             OpenGL32
@@ -243,6 +295,7 @@ elseif (WIN32)
             ole32
             oleaut32
             uuid
+            iphlpapi
             #            glew32s
             crypt32
             #            libcurl
@@ -259,6 +312,8 @@ elseif (WIN32)
             xaudio2
             ucrt
     )
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+
     target_link_libraries(of_static PUBLIC ${OF_WIN_SYSTEM_LIBS})
 endif ()
 
@@ -280,19 +335,19 @@ if (APPLE)
 elseif (WIN32)
     #    set(CMAKE_CXX_FLAGS [=[/std:c++20 /std:c17 /MP /W3 /Zc:wchar_t /Zi /Gm- /Zc:inline /fp:precise /D "OF_NO_FMOD" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "POCO_STATIC" /D "CAIRO_WIN32_STATIC_BUILD" /D "DISABLE_SOME_FLOATING_POINT" /D "CURL_STATICLIB" /D "_UNICODE" /D "UNICODE" /MDd]=])
     set(CMAKE_C_FLAGS "/std:c17")
-    target_compile_definitions(of_static PUBLIC WIN32 CURL_STATICLIB FREEIMAGE_LIB URI_STATIC_BUILD _HAS_STREAM_INSERTION_OPERATORS_DELETED_IN_CXX20 _CONSOLE POCO_STATIC CAIRO_WIN32_STATIC_BUILD DISABLE_SOME_FLOATING_POINT OF_NO_FMOD GLM_FORCE_CTOR_INIT GLM_ENABLE_EXPERIMENTAL _UNICODE UNICODE)
+    target_compile_definitions(of_static PUBLIC $<$<CONFIG:Debug>:_DEBUG> WIN32 CURL_STATICLIB FREEIMAGE_LIB URI_STATIC_BUILD _HAS_STREAM_INSERTION_OPERATORS_DELETED_IN_CXX20 _CONSOLE POCO_STATIC CAIRO_WIN32_STATIC_BUILD DISABLE_SOME_FLOATING_POINT OF_NO_FMOD GLM_FORCE_CTOR_INIT GLM_ENABLE_EXPERIMENTAL _UNICODE UNICODE)
     set_target_properties(of_static PROPERTIES
             MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
     )
     target_compile_options(of_static PUBLIC
             $<$<CONFIG:Debug>:/Od>
             $<$<CONFIG:Release>:/O2>
-
             /WX- /Zc:forScope /Gd /std:c++20 /FC /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise)
     #    set(CMAKE_CXX_FLAGS [=[ /WX- /Zc:forScope /Gd /std:c++20 /FC  /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise /D  ]=])
-#    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-    #/DEBUG
-    target_link_options(of_static PUBLIC /DYNAMICBASE /MACHINE:X64 /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:MSVCRT /NODEFAULTLIB:libcmt /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /INCREMENTAL /SUBSYSTEM:CONSOLE /NOLOGO)
+    #    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+    #/DEBUG /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:MSVCRT  /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:libcmt
+
+    target_link_options(of_static PUBLIC /MACHINE:X64 /NOLOGO)
 
 endif ()
 
