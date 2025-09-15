@@ -2,9 +2,9 @@
 cmake_minimum_required(VERSION 3.28)
 
 project(openFrameworks)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(OF_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-
-include(${OF_DIRECTORY}/cmake/of_macros.cmake)
+include(of_macros)
 
 # --------------------------------------------------
 # Source Files
@@ -85,7 +85,6 @@ endif ()
 add_library(of_static STATIC ${OF_SRC})
 set_target_properties(of_static PROPERTIES OUTPUT_NAME "openframeworksLib$<$<CONFIG:Debug>:_debug>")
 
-
 # --------------------------------------------------
 # Includes
 # --------------------------------------------------
@@ -112,11 +111,6 @@ set(OF_LIB_NAMES
         utf8
         zlib
 )
-
-#set(OF_LIB_NAMES)
-#of_get_subdir_names(OF_LIB_NAMES ${OF_DIRECTORY}/libs)
-#list(REMOVE_ITEM OF_LIB_NAMES download openFrameworks openFrameworksCompiled)
-#list(REMOVE_ITEM OF_LIB_NAMES "download")
 
 set(OF_HEADERS
         ${OF_DIRECTORY}/libs/openFrameworks/
@@ -163,9 +157,13 @@ include_directories(${OF_HEADERS})
 
 if (APPLE)
     foreach (ITEM ${OF_LIB_NAMES})
-        #        of_add_xcframework_lib(of_static ${ITEM})
-        set(XCF_PATH "${OF_DIRECTORY}/libs/${ITEM}/lib/macos/${ITEM}.xcframework")
-        target_link_libraries(of_static PUBLIC ${XCF_PATH})
+        # This doesn't work because the xcframeworks being produced don't have Info.plist files:
+        # set(XCF_PATH "${OF_DIRECTORY}/libs/${ITEM}/lib/macos/${ITEM}.xcframework")
+        # target_link_libraries(of_static PUBLIC ${XCF_PATH})
+
+        # So we use our own function to extract and link the .a files:
+        of_add_xcframework_lib(of_static ${ITEM})
+
     endforeach ()
 
 

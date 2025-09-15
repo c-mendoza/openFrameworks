@@ -66,7 +66,7 @@ function(of_load_generic_addon ADDON_PATH NAME_ADDON)
     else ()
         message("Adding Library ${NAME_ADDON}")
         add_library(${NAME_ADDON} STATIC ${OFX_ADDON_CPP} ${OFX_ADDON_LIBS_CPP})
-        target_link_libraries(${PROJECT_NAME} PRIVATE ${NAME_ADDON})
+        target_link_libraries(${OF_APP_NAME} PRIVATE ${NAME_ADDON})
 
     endif ()
 
@@ -187,27 +187,31 @@ function(of_add_xcframework_lib TARGET LIB_DIR_NAME)
 endfunction(of_add_xcframework_lib)
 
 set(OF_APP_NAME)
-set(MACOS_BUNDLE_ID "com.example.one")
+set(OF_MACOS_BUNDLE_ID "com.example.one")
 
 macro(of_app APP_NAME SOURCE_FILES)
     set(OF_APP_NAME ${APP_NAME})
-    if (APPLE)
-        #        message(STATUS "${SOURCE_FILES}")
-        add_executable(${APP_NAME} MACOSX_BUNDLE "${SOURCE_FILES}")
-        #configure_file(
-        #        "${CMAKE_SOURCE_DIR}/openFrameworks-Info.plist.in"
-        #        "${CMAKE_SOURCE_DIR}/Info.plist"
-        #        @ONLY
-        #)
+    set(OUTPUT_APP_NAME ${APP_NAME})
+    if (CMAKE_BUILD_TYPE MATCHES Debug)
+        set(OUTPUT_APP_NAME "${APP_NAME}_debug")
+    endif ()
 
+    if (APPLE)
+        set(PLIST_TEMPLATE "${OF_DIRECTORY}/cmake/MacOSXBundleInfo.plist.in")
+        set(PLIST_OUT "${CMAKE_BINARY_DIR}/MacOSXBundleInfo.plist")
+
+        configure_file(${PLIST_TEMPLATE} ${PLIST_OUT})
+        add_executable(${APP_NAME} MACOSX_BUNDLE "${SOURCE_FILES}")
         set_target_properties(${APP_NAME} PROPERTIES
-                #                      CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
-                #                      CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO"
-                MACOSX_BUNDLE_GUI_IDENTIFIER ${MACOS_BUNDLE_ID}
-                MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/openFrameworks-Info.plist.in
-                MACOSX_BUNDLE_BUNDLE_NAME ${APP_NAME}
+                MACOSX_BUNDLE TRUE
+                MACOSX_BUNDLE_INFO_PLIST ${PLIST_OUT}
+                CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ""
+                CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO"
+                RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
+                OUTPUT_NAME ${OUTPUT_APP_NAME}
+                #                MACOSX_BUNDLE_GUI_IDENTIFIER ${MACOS_BUNDLE_ID}
         )
-        #
+
         #set_target_properties(${APP_NAME} PROPERTIES
         #        MACOSX_BUNDLE TRUE
         #        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/Info.plist"
@@ -238,7 +242,7 @@ macro(of_app APP_NAME SOURCE_FILES)
     elseif (WIN32)
         add_executable(${APP_NAME} "${SOURCE_FILES}")
         target_compile_options(${APP_NAME} PUBLIC
-                $<$<CONFIG:Debug>:/Od>
+                $<$<CONFIG:Debug>:/Od /Zl>
                 $<$<CONFIG:Release>:/O2>
                 -U__MINGW64__
                 -U__MINGW32__)
@@ -249,6 +253,11 @@ macro(of_app APP_NAME SOURCE_FILES)
         else ()
             target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE:NO /MACHINE:X64 /INCREMENTAL /SUBSYSTEM:CONSOLE /NOLOGO)
         endif ()
+        set_target_properties(${APP_NAME}
+                PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
+                OUTPUT_NAME ${OUTPUT_APP_NAME}
+        )
     endif ()
 
     target_link_libraries(${APP_NAME} PUBLIC of_static)
@@ -258,16 +267,7 @@ macro(of_app APP_NAME SOURCE_FILES)
     #        add_dependencies( ${APP_NAME} ${OF_ADDONS} )
     #    endif ()
 
-    set(OUTPUT_APP_NAME ${APP_NAME})
-    if (CMAKE_BUILD_TYPE MATCHES Debug)
-        set(OUTPUT_APP_NAME "${APP_NAME}_debug")
-    endif ()
 
-    set_target_properties(${APP_NAME}
-            PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
-            OUTPUT_NAME ${OUTPUT_APP_NAME}
-    )
 endmacro()
 
 function(of_print_list LIST)

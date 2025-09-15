@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
-set(OF_ROOT ../..)
+set(OF_ROOT ../../)
 
 # TODO: Turn this into find_package
 include(${OF_ROOT}/CMakeLists.txt)
