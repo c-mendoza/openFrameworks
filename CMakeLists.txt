@@ -157,13 +157,11 @@ include_directories(${OF_HEADERS})
 
 if (APPLE)
     foreach (ITEM ${OF_LIB_NAMES})
-        # This doesn't work because the xcframeworks being produced don't have Info.plist files:
-        # set(XCF_PATH "${OF_DIRECTORY}/libs/${ITEM}/lib/macos/${ITEM}.xcframework")
-        # target_link_libraries(of_static PUBLIC ${XCF_PATH})
-
-        # So we use our own function to extract and link the .a files:
-        of_add_xcframework_lib(of_static ${ITEM})
-
+        set(XCF_PATH "${OF_DIRECTORY}/libs/${ITEM}/lib/macos/${ITEM}.xcframework")
+        # Some libs are include-only, so check if the xcframework exists
+        if (EXISTS ${XCF_PATH})
+            target_link_libraries(of_static PUBLIC ${XCF_PATH})
+        endif ()
     endforeach ()
 
 

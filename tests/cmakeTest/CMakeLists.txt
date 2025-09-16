@@ -11,6 +11,7 @@ file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 #of_print_list(SOURCES)
 
 of_app("cmakeTest" "${SOURCES}")
+of_include_addon(ofxPoco)
 add_link_options($<$<CONFIG:Debug>:/VERBOSE>)
 
 #add_executable(${PROJECT_NAME} ${SOURCES})

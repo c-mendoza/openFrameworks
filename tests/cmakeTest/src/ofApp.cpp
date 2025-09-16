@@ -1,9 +1,11 @@
 #include "ofApp.h"
+#include "Poco//DateTime.h"
 
 //--------------------------------------------------------------
 void ofApp::setup() {
 	ofSetVerticalSync(true);
-
+	Poco::DateTime dt;
+	ofLogNotice() << dt.utcTime();
 	// load an image from disk
 	img.load("linzer.png");
 
