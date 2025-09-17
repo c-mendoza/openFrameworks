@@ -1,4 +1,5 @@
 include_guard(GLOBAL)
+#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 
 ##### Determine OF Target
 option(OF_TARGET_CATOS 0)
@@ -127,6 +128,12 @@ function(of_include_addon addonName)
     endif ()
 endfunction()
 
+if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" OR
+        CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+    set(_CONFIG "Release")
+else()
+    set(_CONFIG "${CMAKE_BUILD_TYPE}")
+endif()
 
 # Adds a library to the current OF_APP via a generic template.
 # The function assumes that the library is in the format:
@@ -147,6 +154,13 @@ function(of_add_generic_lib path)
             )
             message(STATUS ${theLibs})
             target_link_libraries(${OF_APP_NAME} PRIVATE ${theLibs})
+        elseif (WIN32)
+            file(GLOB winLibs
+                    "${path}/lib/vs/x64/${_CONFIG}/*.lib"
+            )
+#            message(STATUS ${winLibs})
+            target_link_libraries(${OF_APP_NAME} PRIVATE ${winLibs})
+
         endif ()
     endif ()
 endfunction()
@@ -271,16 +285,18 @@ macro(of_app APP_NAME SOURCE_FILES)
     elseif (WIN32)
         add_executable(${APP_NAME} "${SOURCE_FILES}")
         target_compile_options(${APP_NAME} PUBLIC
+#                $<$<CONFIG:Debug>:/Od /Zl /D _DEBUG>
                 $<$<CONFIG:Debug>:/Od /Zl>
                 $<$<CONFIG:Release>:/O2>
                 -U__MINGW64__
                 -U__MINGW32__)
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
         #        target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE /MACHINE:X64 /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:MSVCRT /NODEFAULTLIB:libcmt /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /INCREMENTAL  /SUBSYSTEM:CONSOLE /NOLOGO )
+#        target_link_options(${APP_NAME} PUBLIC /DEBUG /MACHINE:X64 /NODEFAULTLIB:"atlthunk.lib" /NODEFAULTLIB:"msvcrt" /NODEFAULTLIB:"libcmt" /NODEFAULTLIB:"LIBC" /NODEFAULTLIB:"LIBCMTD" /INCREMENTAL)
+
         if (CMAKE_BUILD_TYPE MATCHES "Debug")
-            target_link_options(${APP_NAME} PUBLIC /DEBUG /MACHINE:X64 /NODEFAULTLIB:"atlthunk.lib" /NODEFAULTLIB:"msvcrt" /NODEFAULTLIB:"libcmt" /NODEFAULTLIB:"LIBC" /NODEFAULTLIB:"LIBCMTD" /INCREMENTAL)
+            target_link_options(${APP_NAME} PUBLIC /MACHINE:X64 /INCREMENTAL)
         else ()
-            target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE:NO /MACHINE:X64 /INCREMENTAL /SUBSYSTEM:CONSOLE /NOLOGO)
+            target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE:NO /MACHINE:X64 /INCREMENTAL /SUBSYSTEM:CONSOLE /NOLOGO /TLBID:1 )
         endif ()
         set_target_properties(${APP_NAME}
                 PROPERTIES
@@ -317,7 +333,7 @@ function(of_get_subdir_names result_var dir)
         endif ()
     endforeach ()
 
-    message(${subdirs})
+#    message(${subdirs})
     # Return result to caller scope
     set(${result_var} ${subdirs} PARENT_SCOPE)
 endfunction()

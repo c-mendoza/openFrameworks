@@ -1,9 +1,14 @@
 ## openFrameworks
 cmake_minimum_required(VERSION 3.28)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:>DLL")
 
-project(openFrameworks)
+#project(openFrameworks)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(OF_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+set(CMAKE_CXX_STANDARD 20)        # or 17
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD  17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 include(of_macros)
 
 # --------------------------------------------------
@@ -220,19 +225,24 @@ elseif (WIN32)
             libcairo.lib
             libcurl.lib
             fmt.lib
-            FreeImage$<$<CONFIG:Debug>:D>.lib
-            freetype$<$<CONFIG:Debug>:d>.lib
+#            FreeImage$<$<CONFIG:Debug>:D>.lib
+            FreeImage.lib
+#            freetype$<$<CONFIG:Debug>:d>.lib
+            freetype.lib
             libglew32.lib
             glfw3.lib
             libpng.lib
             libcrypto.lib
             libssl.lib
             libpixman-1.lib
-            pugixml$<$<CONFIG:Debug>:D>.lib
-            rtaudio$<$<CONFIG:Debug>:D>.lib
+#            pugixml$<$<CONFIG:Debug>:D>.lib
+            pugixml.lib
+#            rtaudio$<$<CONFIG:Debug>:D>.lib
+            rtaudio.lib
             tess2.lib
             uriparser.lib
-            videoInput$<$<CONFIG:Debug>:D>.lib
+#            videoInput$<$<CONFIG:Debug>:D>.lib
+            videoInput.lib
             zlib.lib
     )
 
@@ -308,8 +318,6 @@ elseif (WIN32)
             xaudio2
             ucrt
     )
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-
     target_link_libraries(of_static PUBLIC ${OF_WIN_SYSTEM_LIBS})
 endif ()
 
@@ -323,22 +331,22 @@ endif ()
 # Compilation options
 # --------------------------------------------------
 
+
 if (APPLE)
     set(CMAKE_C_FLAGS "-x objective-c") # -x objective-c
-    set(CMAKE_CXX_FLAGS "-std=c++17 -stdlib=libc++ -D__MACOSX_CORE__ -fobjc-arc") # Removed "-stdlib=libstdc++
+    set(CMAKE_CXX_FLAGS "-stdlib=libc++ -D__MACOSX_CORE__ -fobjc-arc") # Removed -std=c++17
     set_source_files_properties(${OF_SRC} PROPERTIES COMPILE_FLAGS "-x objective-c++")
     add_compile_options(-Wno-deprecated-declarations)
 elseif (WIN32)
-    #    set(CMAKE_CXX_FLAGS [=[/std:c++20 /std:c17 /MP /W3 /Zc:wchar_t /Zi /Gm- /Zc:inline /fp:precise /D "OF_NO_FMOD" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "POCO_STATIC" /D "CAIRO_WIN32_STATIC_BUILD" /D "DISABLE_SOME_FLOATING_POINT" /D "CURL_STATICLIB" /D "_UNICODE" /D "UNICODE" /MDd]=])
-    set(CMAKE_C_FLAGS "/std:c17")
-    target_compile_definitions(of_static PUBLIC $<$<CONFIG:Debug>:_DEBUG> WIN32 CURL_STATICLIB FREEIMAGE_LIB URI_STATIC_BUILD _HAS_STREAM_INSERTION_OPERATORS_DELETED_IN_CXX20 _CONSOLE POCO_STATIC CAIRO_WIN32_STATIC_BUILD DISABLE_SOME_FLOATING_POINT OF_NO_FMOD GLM_FORCE_CTOR_INIT GLM_ENABLE_EXPERIMENTAL _UNICODE UNICODE)
-    set_target_properties(of_static PROPERTIES
-            MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
-    )
+    #    set(CMAKE_CXX_FLAGS [=[/std:c++20 /std:c17 /MP /W3 /Zc:wchar_t /Zi /Gm- /Zc:inline /fp:precise /D "OF_NO_FMOD" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "POCO_STATIC" /D "CAIRO_WIN32_STATIC_BUILD" /D "DISABLE_SOME_FLOATING_POINT" /D "CURL_STATICLIB" /D "_UNICODE" /D "UNICODE" /MDd]=])FREEIMAGE_LIB
+#    set(CMAKE_C_FLAGS "/std:c17")
+    target_compile_definitions(of_static PUBLIC  WIN32 CURL_STATICLIB URI_STATIC_BUILD _HAS_STREAM_INSERTION_OPERATORS_DELETED_IN_CXX20 _CONSOLE POCO_STATIC CAIRO_WIN32_STATIC_BUILD DISABLE_SOME_FLOATING_POINT OF_NO_FMOD GLM_FORCE_CTOR_INIT GLM_ENABLE_EXPERIMENTAL _UNICODE UNICODE FREEIMAGE_LIB)
     target_compile_options(of_static PUBLIC
-            $<$<CONFIG:Debug>:/Od>
+#            $<$<CONFIG:Debug>:/D _DEBUG>
+            $<$<CONFIG:Debug>:/Od /Zl>
             $<$<CONFIG:Release>:/O2>
-            /WX- /Zc:forScope /Gd /std:c++20 /FC /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise)
+            /Gm-
+            /WX- /Zc:forScope /Gd /FC /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise)
     #    set(CMAKE_CXX_FLAGS [=[ /WX- /Zc:forScope /Gd /std:c++20 /FC  /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise /D  ]=])
     #    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
     #/DEBUG /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:MSVCRT  /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:libcmt
