@@ -1,32 +1,15 @@
 include_guard(GLOBAL)
+include(of_detect)
+
 #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" OR
+        CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+    set(_CONFIG "Release")
+else ()
+    set(_CONFIG "${CMAKE_BUILD_TYPE}")
+endif ()
 
-##### Determine OF Target
-option(OF_TARGET_CATOS 0)
-option(OF_TARGET_EMSCRIPTEN 0)
-option(OF_TARGET_IOS 0)
-option(OF_TARGET_LINUX 0)
-option(OF_TARGET_MACOS 0)
-option(OF_TARGET_MSYS2 0)
-option(OF_TARGET_OSX 0)
-option(OF_TARGET_TVOS 0)
-option(OF_TARGET_VS 0)
-option(OF_TARGET_WATCHOS 0)
-option(OF_TARGET_VISIONOS 0)
-option(OF_TARGET_XROS 0)
-
-
-set(OF_ARCH_X86_64 0)
-set(OF_ARCH_ARM64 0)
-set(OF_ARCH_ARMEC 0)
-set(OF_ARCH_ARMV6 0)
-set(OF_ARCH_ARMV7 0)
-set(OF_ARCH_MEMORY64 0)
-set(OF_ARCH_x86_64_SIMULATOR 0)
-set(OF_ARCH_x86_64 0)
-
-
-function(of_include_addon addonName)
+function(ofIncludeAddon addonName)
     function(find_addon_include_dirs ADDON_PATH OUT_INCLUDE_DIRS)
         set(INCLUDE_DIRS "")
         # Check if the 'libs' directory exists
@@ -65,40 +48,51 @@ function(of_include_addon addonName)
         message(${addonPath})
         set(addonSrc)
 
-        file(GLOB_RECURSE OFX_ADDON_CPP "${PATH_SRC}/*.cpp")
-        file(GLOB_RECURSE OFX_ADDON_CC "${PATH_SRC}/*.cc")
-        file(GLOB_RECURSE OFX_ADDON_LIBS_CPP "${PATH_LIBS}/*.cpp")
-        file(GLOB_RECURSE OFX_ADDON_LIBS_CC "${PATH_LIBS}/*.cc")
-        list(APPEND addonSrc ${OFX_ADDON_CPP} ${OFX_ADDON_CC} ${OFX_ADDON_LIBS_CPP} ${OFX_ADDON_LIBS_CC})
+        file(GLOB_RECURSE addonSrc
+                "${PATH_SRC}/*.cpp"
+                "${PATH_SRC}/*.cc"
+                "${PATH_SRC}/*.c"
+                #                "${PATH_LIBS}/*.cpp"
+                #                "${PATH_LIBS}/*.cc"
+                #                "${PATH_LIBS}/*.c"
+        )
+
+        #        file(GLOB_RECURSE addonLibsSrc
+        #                "${PATH_LIBS}/*.cpp"
+        #                "${PATH_LIBS}/*.cc")
+        #        list(APPEND addonSrc ${OFX_ADDON_CPP}
+        #                ${OFX_ADDON_LIBS_CPP})
+
+        #    set(libs_subdirs)
+        ofGetSubdirNames(libs_subdirs ${PATH_LIBS})
 
         list(LENGTH addonSrc list_length)
         if (list_length EQUAL 0)
             message("List is empty")
         else ()
-            message("Adding Library ${addonName}")
-            add_library(${addonName} STATIC ${OFX_ADDON_CPP} ${OFX_ADDON_LIBS_CPP})
+            message("Addon ${addonName}")
+            ofPrintList(addonSrc)
+            add_library(${addonName} STATIC ${addonSrc})
             target_link_libraries(${OF_APP_NAME} PRIVATE ${addonName})
-
+            add_dependencies(${OF_APP_NAME} ${addonName})
         endif ()
 
-        #    set(libs_subdirs)
-        of_get_subdir_names(libs_subdirs ${PATH_LIBS})
-
         foreach (item ${libs_subdirs})
-            of_add_generic_lib(${PATH_LIBS}/${item})
+            ofAddGenericLib(${PATH_LIBS}/${item} ${addonName})
         endforeach ()
 
-        message("here: ${libs_subdirs}")
 
-        OF_find_header_directories(HEADERS_SOURCE ${PATH_SRC})
-        OF_find_header_directories(HEADERS_LIBS ${PATH_LIBS})
-        message(STATUS ${HEADERS_SOURCE})
-        message(STATUS "---")
-        message(STATUS ${HEADERS_LIB})
+        #        message("here: ${libs_subdirs}")
+
+        ofFindHeaderDirectories(HEADERS_SOURCE ${PATH_SRC})
+        ofFindHeaderDirectories(HEADERS_LIBS ${PATH_LIBS})
+        #        message(STATUS ${HEADERS_SOURCE})
+        #        message(STATUS "---")
+        #        message(STATUS ${HEADERS_LIB})
         include_directories(${PATH_SRC})
         #        find_addon_include_dirs(${ADDON_PATH} ADDON_INCLUDE_DIRS)
-        message(STATUS "Found include directories: ${ADDON_INCLUDE_DIRS}")
-        include_directories(${ADDON_INCLUDE_DIRS})
+        #        message(STATUS "Found include directories: ${ADDON_INCLUDE_DIRS}")
+        #        include_directories(${ADDON_INCLUDE_DIRS})
     endfunction()
 
     set(globalAddonPath "${OF_DIRECTORY}/addons/${addonName}")
@@ -128,61 +122,52 @@ function(of_include_addon addonName)
     endif ()
 endfunction()
 
-if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" OR
-        CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
-    set(_CONFIG "Release")
-else()
-    set(_CONFIG "${CMAKE_BUILD_TYPE}")
-endif()
 
 # Adds a library to the current OF_APP via a generic template.
 # The function assumes that the library is in the format:
 # libName
 #  |___ include
 #  |___ lib
+#  |___ src
 # It will link all lib files it finds in the /lib directory.
-function(of_add_generic_lib path)
+function(ofAddGenericLib path target)
     if (EXISTS ${path}/include)
         include_directories(${path}/include)
     endif ()
     if (EXISTS ${path}/lib)
         message(${path}/lib)
-        if (APPLE)
+        if (OF_TARGET_MACOS)
+#            message("KLASJHDKJASHD")
             file(GLOB theLibs
                     "${path}/lib/macos/*.a"
                     "${path}/lib/macos/*.xcframework"
             )
             message(STATUS ${theLibs})
-            target_link_libraries(${OF_APP_NAME} PRIVATE ${theLibs})
-        elseif (WIN32)
+            target_link_libraries(${target} PRIVATE ${theLibs})
+        elseif (OF_TARGET_VS)
             file(GLOB winLibs
                     "${path}/lib/vs/x64/${_CONFIG}/*.lib"
             )
-#            message(STATUS ${winLibs})
-            target_link_libraries(${OF_APP_NAME} PRIVATE ${winLibs})
+            #            message(STATUS ${winLibs})
+            target_link_libraries(${target} PRIVATE ${winLibs})
 
         endif ()
+    endif ()
+    if (EXISTS ${path}/src)
+        include_directories(${path}/src)
+        file(GLOB_RECURSE libSources
+                "${path}/src/*.cpp"
+                "${path}/src/*.cc"
+                "${path}/src/*.c"
+        )
+        target_sources(${target} PUBLIC ${libSources})
     endif ()
 endfunction()
 
 
-#==================================================================
-
-# macro( OF_include_external_addOn addonName )
-#     if( ${addonName} IN_LIST OFX_ADDONS_ACTIVE )
-#         if( EXISTS ${OF_DIRECTORY_ABSOLUTE}/addons/${addonName}/)
-#             include( ${OF_CMAKE_ADDONS}/external/${addonName}.cmake )
-#             message( STATUS "${addonName} activated" )
-#         else()
-#             message( WARNING "${addonName} folder not found" )
-#         endif()
-#     endif()
-# endmacro( OF_include_external_addOn )
-
-
 # TODO Find also .hpp files
 # ---- Find all include directories
-function(of_find_header_directories return_list PATH)
+function(ofFindHeaderDirectories return_list PATH)
     FILE(GLOB_RECURSE new_list ${PATH}/*.h)
     SET(dir_list "")
     FOREACH (file_path ${new_list})
@@ -191,7 +176,7 @@ function(of_find_header_directories return_list PATH)
     ENDFOREACH ()
     LIST(REMOVE_DUPLICATES dir_list)
     SET(${return_list} ${dir_list})
-endfunction(of_find_header_directories)
+endfunction(ofFindHeaderDirectories)
 
 function(of_add_xcframework_lib TARGET LIB_DIR_NAME)
     # Pick the right slice depending on platform
@@ -232,7 +217,8 @@ endfunction(of_add_xcframework_lib)
 set(OF_APP_NAME)
 set(OF_MACOS_BUNDLE_ID "com.example.one")
 
-macro(of_app APP_NAME SOURCE_FILES)
+macro(ofApp APP_NAME SOURCE_FILES)
+    ofDetectTarget()
     set(OF_APP_NAME ${APP_NAME})
     set(OUTPUT_APP_NAME ${APP_NAME})
     if (CMAKE_BUILD_TYPE MATCHES Debug)
@@ -285,18 +271,18 @@ macro(of_app APP_NAME SOURCE_FILES)
     elseif (WIN32)
         add_executable(${APP_NAME} "${SOURCE_FILES}")
         target_compile_options(${APP_NAME} PUBLIC
-#                $<$<CONFIG:Debug>:/Od /Zl /D _DEBUG>
+                #                $<$<CONFIG:Debug>:/Od /Zl /D _DEBUG>
                 $<$<CONFIG:Debug>:/Od /Zl>
                 $<$<CONFIG:Release>:/O2>
                 -U__MINGW64__
                 -U__MINGW32__)
         #        target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE /MACHINE:X64 /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:MSVCRT /NODEFAULTLIB:libcmt /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /INCREMENTAL  /SUBSYSTEM:CONSOLE /NOLOGO )
-#        target_link_options(${APP_NAME} PUBLIC /DEBUG /MACHINE:X64 /NODEFAULTLIB:"atlthunk.lib" /NODEFAULTLIB:"msvcrt" /NODEFAULTLIB:"libcmt" /NODEFAULTLIB:"LIBC" /NODEFAULTLIB:"LIBCMTD" /INCREMENTAL)
+        #        target_link_options(${APP_NAME} PUBLIC /DEBUG /MACHINE:X64 /NODEFAULTLIB:"atlthunk.lib" /NODEFAULTLIB:"msvcrt" /NODEFAULTLIB:"libcmt" /NODEFAULTLIB:"LIBC" /NODEFAULTLIB:"LIBCMTD" /INCREMENTAL)
 
         if (CMAKE_BUILD_TYPE MATCHES "Debug")
             target_link_options(${APP_NAME} PUBLIC /MACHINE:X64 /INCREMENTAL)
         else ()
-            target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE:NO /MACHINE:X64 /INCREMENTAL /SUBSYSTEM:CONSOLE /NOLOGO /TLBID:1 )
+            target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE:NO /MACHINE:X64 /INCREMENTAL /SUBSYSTEM:CONSOLE /NOLOGO /TLBID:1)
         endif ()
         set_target_properties(${APP_NAME}
                 PROPERTIES
@@ -315,38 +301,37 @@ macro(of_app APP_NAME SOURCE_FILES)
 
 endmacro()
 
-function(of_print_list LIST)
+function(ofPrintList LIST)
     foreach (ITEM IN LISTS ${LIST})
         message(STATUS ${ITEM})
     endforeach ()
 endfunction()
 
-function(of_get_subdir_names result_var dir)
+function(ofGetSubdirNames result_var dir)
     # Get all children of dir
     file(GLOB children RELATIVE "${dir}" "${dir}/*")
 
     set(subdirs "")
     foreach (child ${children})
-
         if (IS_DIRECTORY "${dir}/${child}")
             list(APPEND subdirs "${child}")
         endif ()
     endforeach ()
 
-#    message(${subdirs})
+    #    message(${subdirs})
     # Return result to caller scope
     set(${result_var} ${subdirs} PARENT_SCOPE)
 endfunction()
 
-function(of_remove_debug_libs result_var the_list)
-    set(filtered_list "")
-    foreach (item IN LISTS the_list)
-        get_filename_component(name "${item}" NAME) # e.g. libD.lib
-        #        message(STATUS ${name})
-        if (NOT name MATCHES "D.lib")
-            list(APPEND filtered_list "${item}")
-        endif ()
-    endforeach ()
-    set(${result_var} "${filtered_list}" PARENT_SCOPE)
-endfunction()
+#function(ofRemoveDebugLibs result_var the_list)
+#    set(filtered_list "")
+#    foreach (item IN LISTS the_list)
+#        get_filename_component(name "${item}" NAME) # e.g. libD.lib
+#        #        message(STATUS ${name})
+#        if (NOT name MATCHES "D.lib")
+#            list(APPEND filtered_list "${item}")
+#        endif ()
+#    endforeach ()
+#    set(${result_var} "${filtered_list}" PARENT_SCOPE)
+#endfunction()
 

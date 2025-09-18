@@ -5,10 +5,10 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:>DLL")
 #project(openFrameworks)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(OF_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-set(CMAKE_CXX_STANDARD 20)        # or 17
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_C_STANDARD  17)
-set(CMAKE_C_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_STANDARD 20)        # or 17
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(CMAKE_C_STANDARD  17)
+#set(CMAKE_C_STANDARD_REQUIRED ON)
 include(of_macros)
 
 # --------------------------------------------------
@@ -334,7 +334,7 @@ endif ()
 
 if (APPLE)
     set(CMAKE_C_FLAGS "-x objective-c") # -x objective-c
-    set(CMAKE_CXX_FLAGS "-stdlib=libc++ -D__MACOSX_CORE__ -fobjc-arc") # Removed -std=c++17
+    set(CMAKE_CXX_FLAGS "-std=c++20 -stdlib=libc++ -D__MACOSX_CORE__ -fobjc-arc") # Removed -std=c++17
     set_source_files_properties(${OF_SRC} PROPERTIES COMPILE_FLAGS "-x objective-c++")
     add_compile_options(-Wno-deprecated-declarations)
 elseif (WIN32)
