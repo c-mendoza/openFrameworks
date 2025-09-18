@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
-set(OF_ROOT ../../)
+set(OF_ROOT ../../../)
 
 # TODO: Turn this into find_package
 include(${OF_ROOT}/CMakeLists.txt)
@@ -12,7 +12,6 @@ file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
 ofApp("cmakeTest" "${SOURCES}")
 ofIncludeAddon(ofxPoco)
-ofIncludeAddon(ofxKinect)
 #add_link_options($<$<CONFIG:Debug>:/VERBOSE>)
 
 include_directories(${OF_ROOT}/addons/ofxKinect/src/extra)

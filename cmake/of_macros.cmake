@@ -78,7 +78,7 @@ function(ofIncludeAddon addonName)
         endif ()
 
         foreach (item ${libs_subdirs})
-            ofAddGenericLib(${PATH_LIBS}/${item} ${addonName})
+            ofAddGenericLib(${PATH_LIBS}/${item} ${OF_APP_NAME})
         endforeach ()
 
 
@@ -138,18 +138,20 @@ function(ofAddGenericLib path target)
         message(${path}/lib)
         if (OF_TARGET_MACOS)
 #            message("KLASJHDKJASHD")
-            file(GLOB theLibs
+            file(GLOB foundLibs
                     "${path}/lib/macos/*.a"
                     "${path}/lib/macos/*.xcframework"
             )
             message(STATUS ${theLibs})
-            target_link_libraries(${target} PRIVATE ${theLibs})
+            target_link_libraries(${target} PRIVATE ${foundLibs})
         elseif (OF_TARGET_VS)
-            file(GLOB winLibs
-                    "${path}/lib/vs/x64/${_CONFIG}/*.lib"
+            # We are only linking release libs at the moment
+            file(GLOB foundLibs
+                    "${path}/lib/vs/x64/Release/*.lib"
             )
-            #            message(STATUS ${winLibs})
-            target_link_libraries(${target} PRIVATE ${winLibs})
+#            message("LIBS:")
+#            ofPrintList(foundLibs)
+            target_link_libraries(${target} PRIVATE ${foundLibs})
 
         endif ()
     endif ()
@@ -225,7 +227,7 @@ macro(ofApp APP_NAME SOURCE_FILES)
         set(OUTPUT_APP_NAME "${APP_NAME}_debug")
     endif ()
 
-    if (APPLE)
+    if (OF_TARGET_MACOS)
         set(PLIST_TEMPLATE "${OF_DIRECTORY}/cmake/MacOSXBundleInfo.plist.in")
         set(PLIST_OUT "${CMAKE_BINARY_DIR}/MacOSXBundleInfo.plist")
 
@@ -268,12 +270,14 @@ macro(ofApp APP_NAME SOURCE_FILES)
         #                ARGS -change @executable_path/libfmod.dylib @executable_path/../Frameworks/libfmod.dylib $<TARGET_FILE:${APP_NAME}>
         #        )
 
-    elseif (WIN32)
+    elseif (OF_TARGET_VS)
         add_executable(${APP_NAME} "${SOURCE_FILES}")
         target_compile_options(${APP_NAME} PUBLIC
                 #                $<$<CONFIG:Debug>:/Od /Zl /D _DEBUG>
                 $<$<CONFIG:Debug>:/Od /Zl>
                 $<$<CONFIG:Release>:/O2>
+                $<$<COMPILE_LANGUAGE:CXX>:/std:c++20>
+                $<$<COMPILE_LANGUAGE:C>:/std:c17>
                 -U__MINGW64__
                 -U__MINGW32__)
         #        target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE /MACHINE:X64 /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:MSVCRT /NODEFAULTLIB:libcmt /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /INCREMENTAL  /SUBSYSTEM:CONSOLE /NOLOGO )
@@ -290,7 +294,6 @@ macro(ofApp APP_NAME SOURCE_FILES)
                 OUTPUT_NAME ${OUTPUT_APP_NAME}
         )
     endif ()
-
     target_link_libraries(${APP_NAME} PUBLIC of_static)
 
     # Add all addons as dependencies

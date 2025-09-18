@@ -196,4 +196,5 @@ scripts/templates/vs/bin/emptyExample_debug.exe
 scripts/templates/vs2019/emptyExample.vcxproj.user
 libs/openFrameworksCompiled/project/android/build-*/
 
-
+#tests/*/bin
+#!tests/*/bin/data/
