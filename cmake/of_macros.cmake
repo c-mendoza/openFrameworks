@@ -38,14 +38,15 @@ function(ofIncludeAddon addonName)
         # Return the list of include directories
         set(${OUT_INCLUDE_DIRS} "${INCLUDE_DIRS}" PARENT_SCOPE)
     endfunction()
+
     # Attempts to load addons that do not have cmake files. Will work with basic addons that have a src directory.
-    # If there are libs that have sources, those will be compiled. It WILL NOT add any framework or static lib to
-    # the project path, however. You can either add a cmake file for that addon or import headers and libraries yourself
-    # in your projects CMakeFiles.txt
+    # If there are libs that have sources, those will be compiled. It will also try to add static libs via ofAddGenericLib
+    # that may be in the addon's libs folder. If that fails, you can import headers and libraries in your app's
+    # CMakeLists.txt.
     function(of_load_generic_addon addonPath addonName)
         set(PATH_SRC ${addonPath}/src)
         set(PATH_LIBS ${addonPath}/libs)
-        message(${addonPath})
+#        message(${addonPath})
         set(addonSrc)
 
         file(GLOB_RECURSE addonSrc
@@ -68,10 +69,10 @@ function(ofIncludeAddon addonName)
 
         list(LENGTH addonSrc list_length)
         if (list_length EQUAL 0)
-            message("List is empty")
+#            message("List is empty")
         else ()
-            message("Addon ${addonName}")
-            ofPrintList(addonSrc)
+#            message("Addon ${addonName}")
+#            ofPrintList(addonSrc)
             add_library(${addonName} STATIC ${addonSrc})
             target_link_libraries(${OF_APP_NAME} PRIVATE ${addonName})
             add_dependencies(${OF_APP_NAME} ${addonName})
@@ -80,9 +81,6 @@ function(ofIncludeAddon addonName)
         foreach (item ${libs_subdirs})
             ofAddGenericLib(${PATH_LIBS}/${item} ${OF_APP_NAME})
         endforeach ()
-
-
-        #        message("here: ${libs_subdirs}")
 
         ofFindHeaderDirectories(HEADERS_SOURCE ${PATH_SRC})
         ofFindHeaderDirectories(HEADERS_LIBS ${PATH_LIBS})
@@ -135,22 +133,21 @@ function(ofAddGenericLib path target)
         include_directories(${path}/include)
     endif ()
     if (EXISTS ${path}/lib)
-        message(${path}/lib)
+#        message(${path}/lib)
         if (OF_TARGET_MACOS)
-#            message("KLASJHDKJASHD")
             file(GLOB foundLibs
                     "${path}/lib/macos/*.a"
                     "${path}/lib/macos/*.xcframework"
             )
-            message(STATUS ${theLibs})
+#            message(STATUS ${theLibs})
             target_link_libraries(${target} PRIVATE ${foundLibs})
         elseif (OF_TARGET_VS)
             # We are only linking release libs at the moment
             file(GLOB foundLibs
                     "${path}/lib/vs/x64/Release/*.lib"
             )
-#            message("LIBS:")
-#            ofPrintList(foundLibs)
+            #            message("LIBS:")
+            #            ofPrintList(foundLibs)
             target_link_libraries(${target} PRIVATE ${foundLibs})
 
         endif ()
@@ -305,13 +302,12 @@ macro(ofApp APP_NAME SOURCE_FILES)
         )
     endif ()
 
+    set_target_properties(${APP_NAME}
+            PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
+            OUTPUT_NAME ${OUTPUT_APP_NAME}
+    )
     target_link_libraries(${APP_NAME} PUBLIC of_static)
-
-    # Add all addons as dependencies
-    #    if (OF_ADDONS)
-    #        add_dependencies( ${APP_NAME} ${OF_ADDONS} )
-    #    endif ()
-
 
 endmacro()
 
