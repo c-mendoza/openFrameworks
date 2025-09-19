@@ -1,24 +1,25 @@
 cmake_minimum_required(VERSION 3.28)
 
+# Set the location of the openFrameworks directory:
 set(OF_ROOT ../../../)
 
+# Include the main CMakeLists, this adds OF as a target and includes the helper macros
 # TODO: Turn this into find_package
 include(${OF_ROOT}/CMakeLists.txt)
 
+# Declare your project
 project(cmakeTest)
+
+# Add the source files that you want to compile with your project
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
-#of_print_list(SOURCES)
+# Debugging macro, this just lists the sources that will be compiled
+ofPrintList(SOURCES)
 
+# This creates your app! Give it a name and pass it the list of sources
 ofApp("cmakeTest" "${SOURCES}")
+
+# This function will include an addon. Please note that some addons may not work at the moment. ofxPoco will work though.
 ofIncludeAddon(ofxPoco)
-#add_link_options($<$<CONFIG:Debug>:/VERBOSE>)
 
-include_directories(${OF_ROOT}/addons/ofxKinect/src/extra)
-#add_executable(${PROJECT_NAME} ${SOURCES})
-#of_set_current_app(${PROJECT_NAME}) # for macros machinery
-
-#of_addon(https://github.com/jvcleave/ofxImGui.git develop)
-
-#target_link_libraries(${PROJECT_NAME} PRIVATE of_static)
-
+#that's it!

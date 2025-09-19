@@ -1,17 +1,11 @@
-## openFrameworks
 cmake_minimum_required(VERSION 3.28)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:>DLL")
 
-#project(openFrameworks)
+project(openFrameworks)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(OF_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 include(of_macros)
-if (WIN32)
-    set(CMAKE_CXX_STANDARD 20)        # or 17
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    set(CMAKE_C_STANDARD 17)
-    set(CMAKE_C_STANDARD_REQUIRED ON)
-endif ()
+
 # --------------------------------------------------
 # Source Files
 # --------------------------------------------------
@@ -89,11 +83,33 @@ endif ()
 # --------------------------------------------------
 
 add_library(of_static STATIC ${OF_SRC})
-set_target_properties(of_static PROPERTIES OUTPUT_NAME "openframeworksLib$<$<CONFIG:Debug>:_debug>")
 
-# --------------------------------------------------
-# Includes
-# --------------------------------------------------
+# These don't seem to work
+set_target_properties(of_static PROPERTIES
+        OUTPUT_NAME "openframeworksLib$<$<CONFIG:Debug>:_debug>"
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        C_STANDARD 17
+        C_STANDARD_REQUIRED ON
+)
+if (OF_TARGET_MACOS)
+    # These don't seem to work
+    set_target_properties(of_static PROPERTIES
+            OBJCXX_STANDARD 20
+            OBJC_STANDARD 17
+    )
+endif ()
+
+# This seems to be the only thing that sets the c++ standard...
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+
+# -------------------------------------------------- #
+# Includes                                           #
+# -------------------------------------------------- #
 
 set(OF_LIB_NAMES
         brotli
@@ -161,7 +177,7 @@ include_directories(${OF_HEADERS})
 # Libraries
 # --------------------------------------------------
 
-if (APPLE)
+if (OF_TARGET_MACOS)
     foreach (ITEM ${OF_LIB_NAMES})
         set(XCF_PATH "${OF_DIRECTORY}/libs/${ITEM}/lib/macos/${ITEM}.xcframework")
         # Some libs are include-only, so check if the xcframework exists
@@ -217,7 +233,7 @@ if (APPLE)
 
     target_link_libraries(of_static PUBLIC ${OF_FRAMEWORKS})
 
-elseif (WIN32)
+elseif (OF_TARGET_VS)
     set(OF_LIB_DIRS)
     set(OF_LIB_FILES
             brotlicommon.lib
@@ -285,40 +301,7 @@ elseif (WIN32)
     #    endforeach ()
 
     message(STATUS ${FOUND_LIBS})
-    set(OF_WIN_SYSTEM_LIBS
-            msimg32
-            OpenGL32
-            kernel32
-            setupapi
-            Vfw32
-            comctl32
-            dsound
-            user32
-            gdi32
-            winspool
-            comdlg32
-            advapi32
-            shell32
-            ole32
-            oleaut32
-            uuid
-            iphlpapi
-            #            glew32s
-            crypt32
-            #            libcurl
-            Ws2_32
-            winmm
-            odbc32
-            odbccp32
-            wldap32
-            mf
-            mfplat
-            mfuuid
-            d3d11
-            mfreadwrite
-            xaudio2
-            ucrt
-    )
+    set(OF_WIN_SYSTEM_LIBS msimg32 OpenGL32 kernel32 setupapi Vfw32 comctl32 dsound user32 gdi32 winspool comdlg32 advapi32 shell32 ole32 oleaut32 uuid iphlpapi crypt32 Ws2_32 winmm odbc32 odbccp32 wldap32 mf mfplat mfuuid d3d11 mfreadwrite xaudio2 ucrt)
     target_link_libraries(of_static PUBLIC ${OF_WIN_SYSTEM_LIBS})
 endif ()
 
@@ -334,13 +317,18 @@ endif ()
 
 
 if (OF_TARGET_MACOS)
-    set(CMAKE_C_FLAGS "-x objective-c") # -x objective-c
-    set(CMAKE_CXX_FLAGS "-std=c++20 -stdlib=libc++ -D__MACOSX_CORE__ -fobjc-arc") # Removed -std=c++17
-    set_source_files_properties(${OF_SRC} PROPERTIES COMPILE_FLAGS "-x objective-c++")
-    add_compile_options(-Wno-deprecated-declarations)
+    set_source_files_properties(${OF_SRC} PROPERTIES
+            COMPILE_FLAGS "-fobjc-arc")
+    target_compile_options(of_static PUBLIC
+            $<$<CONFIG:Debug>:-O0>
+            $<$<CONFIG:Release>:-O3>
+            $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -stdlib=libc++ -fobjc-arc -x objective-c++>
+            $<$<COMPILE_LANGUAGE:C>:-x objective-c>
+            -Wno-deprecated-declarations
+    )
+    target_compile_definitions(of_static PUBLIC __MACOSX_CORE__)
+
 elseif (OF_TARGET_VS)
-    #    set(CMAKE_CXX_FLAGS [=[/std:c++20 /std:c17 /MP /W3 /Zc:wchar_t /Zi /Gm- /Zc:inline /fp:precise /D "OF_NO_FMOD" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "POCO_STATIC" /D "CAIRO_WIN32_STATIC_BUILD" /D "DISABLE_SOME_FLOATING_POINT" /D "CURL_STATICLIB" /D "_UNICODE" /D "UNICODE" /MDd]=])FREEIMAGE_LIB
-    #    set(CMAKE_C_FLAGS "/std:c17")
     target_compile_definitions(of_static PUBLIC
             WIN32 CURL_STATICLIB URI_STATIC_BUILD _HAS_STREAM_INSERTION_OPERATORS_DELETED_IN_CXX20 _CONSOLE POCO_STATIC CAIRO_WIN32_STATIC_BUILD DISABLE_SOME_FLOATING_POINT OF_NO_FMOD GLM_FORCE_CTOR_INIT GLM_ENABLE_EXPERIMENTAL _UNICODE UNICODE FREEIMAGE_LIB)
     target_compile_options(of_static PUBLIC
@@ -351,10 +339,6 @@ elseif (OF_TARGET_VS)
             $<$<COMPILE_LANGUAGE:C>:/std:c17>
             /Gm-
             /WX- /Zc:forScope /Gd /FC /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise)
-    #    set(CMAKE_CXX_FLAGS [=[ /WX- /Zc:forScope /Gd /std:c++20 /FC  /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise /D  ]=])
-    #    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-    #/DEBUG /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /NODEFAULTLIB:MSVCRT  /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:libcmt
-
     target_link_options(of_static PUBLIC /MACHINE:X64 /NOLOGO)
 
 endif ()

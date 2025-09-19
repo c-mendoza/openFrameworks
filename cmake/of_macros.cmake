@@ -243,6 +243,16 @@ macro(ofApp APP_NAME SOURCE_FILES)
                 #                MACOSX_BUNDLE_GUI_IDENTIFIER ${MACOS_BUNDLE_ID}
         )
 
+        target_compile_options(${APP_NAME} PUBLIC
+                $<$<CONFIG:Debug>:-O0>
+                $<$<CONFIG:Release>:-O3>
+                $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -stdlib=libc++ -fobjc-arc -x objective-c++>
+                $<$<COMPILE_LANGUAGE:C>:-x objective-c>
+                -Wno-deprecated-declarations
+        )
+        target_compile_definitions(${APP_NAME} PUBLIC __MACOSX_CORE__)
+
+
         #set_target_properties(${APP_NAME} PROPERTIES
         #        MACOSX_BUNDLE TRUE
         #        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/Info.plist"
@@ -294,6 +304,7 @@ macro(ofApp APP_NAME SOURCE_FILES)
                 OUTPUT_NAME ${OUTPUT_APP_NAME}
         )
     endif ()
+
     target_link_libraries(${APP_NAME} PUBLIC of_static)
 
     # Add all addons as dependencies
