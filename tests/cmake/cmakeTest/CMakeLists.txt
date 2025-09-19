@@ -14,7 +14,7 @@ project(cmakeTest)
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
 # Debugging macro, this just lists the sources that will be compiled
-ofPrintList(SOURCES)
+#ofPrintList(SOURCES)
 
 # This creates your app! Give it a name and pass it the list of sources
 ofApp("cmakeTest" "${SOURCES}")

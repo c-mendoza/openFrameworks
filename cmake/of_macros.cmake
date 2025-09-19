@@ -46,7 +46,7 @@ function(ofIncludeAddon addonName)
     function(of_load_generic_addon addonPath addonName)
         set(PATH_SRC ${addonPath}/src)
         set(PATH_LIBS ${addonPath}/libs)
-#        message(${addonPath})
+        #        message(${addonPath})
         set(addonSrc)
 
         file(GLOB_RECURSE addonSrc
@@ -69,10 +69,10 @@ function(ofIncludeAddon addonName)
 
         list(LENGTH addonSrc list_length)
         if (list_length EQUAL 0)
-#            message("List is empty")
+            #            message("List is empty")
         else ()
-#            message("Addon ${addonName}")
-#            ofPrintList(addonSrc)
+            #            message("Addon ${addonName}")
+            #            ofPrintList(addonSrc)
             add_library(${addonName} STATIC ${addonSrc})
             target_link_libraries(${OF_APP_NAME} PRIVATE ${addonName})
             add_dependencies(${OF_APP_NAME} ${addonName})
@@ -133,21 +133,22 @@ function(ofAddGenericLib path target)
         include_directories(${path}/include)
     endif ()
     if (EXISTS ${path}/lib)
-#        message(${path}/lib)
+        #        message(${path}/lib)
         if (OF_TARGET_MACOS)
             file(GLOB foundLibs
                     "${path}/lib/macos/*.a"
                     "${path}/lib/macos/*.xcframework"
             )
-#            message(STATUS ${theLibs})
+            #            message(STATUS ${theLibs})
             target_link_libraries(${target} PRIVATE ${foundLibs})
         elseif (OF_TARGET_VS)
             # We are only linking release libs at the moment
             file(GLOB foundLibs
                     "${path}/lib/vs/x64/Release/*.lib"
             )
-            #            message("LIBS:")
-            #            ofPrintList(foundLibs)
+            message("LIBS:")
+            ofPrintList(foundLibs)
+            message("TARGET: ${target}")
             target_link_libraries(${target} PRIVATE ${foundLibs})
 
         endif ()
@@ -280,26 +281,23 @@ macro(ofApp APP_NAME SOURCE_FILES)
     elseif (OF_TARGET_VS)
         add_executable(${APP_NAME} "${SOURCE_FILES}")
         target_compile_options(${APP_NAME} PUBLIC
-                #                $<$<CONFIG:Debug>:/Od /Zl /D _DEBUG>
                 $<$<CONFIG:Debug>:/Od /Zl>
                 $<$<CONFIG:Release>:/O2>
                 $<$<COMPILE_LANGUAGE:CXX>:/std:c++20>
                 $<$<COMPILE_LANGUAGE:C>:/std:c17>
+                /Gm-
+                /WX- /Zc:forScope /Gd /FC /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise
                 -U__MINGW64__
                 -U__MINGW32__)
         #        target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE /MACHINE:X64 /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:MSVCRT /NODEFAULTLIB:libcmt /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /INCREMENTAL  /SUBSYSTEM:CONSOLE /NOLOGO )
         #        target_link_options(${APP_NAME} PUBLIC /DEBUG /MACHINE:X64 /NODEFAULTLIB:"atlthunk.lib" /NODEFAULTLIB:"msvcrt" /NODEFAULTLIB:"libcmt" /NODEFAULTLIB:"LIBC" /NODEFAULTLIB:"LIBCMTD" /INCREMENTAL)
-
+        target_compile_definitions(${APP_NAME} PUBLIC
+                WIN32 CURL_STATICLIB URI_STATIC_BUILD _HAS_STREAM_INSERTION_OPERATORS_DELETED_IN_CXX20 _CONSOLE POCO_STATIC CAIRO_WIN32_STATIC_BUILD DISABLE_SOME_FLOATING_POINT OF_NO_FMOD GLM_FORCE_CTOR_INIT GLM_ENABLE_EXPERIMENTAL _UNICODE UNICODE FREEIMAGE_LIB) #GLEW_STATIC
         if (CMAKE_BUILD_TYPE MATCHES "Debug")
-            target_link_options(${APP_NAME} PUBLIC /MACHINE:X64 /INCREMENTAL)
+            target_link_options(${APP_NAME} PUBLIC /MACHINE:X64 /INCREMENTAL /FORCE:MULTIPLE)
         else ()
-            target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE:NO /MACHINE:X64 /INCREMENTAL /SUBSYSTEM:CONSOLE /NOLOGO /TLBID:1)
+            target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE:NO /MACHINE:X64 /INCREMENTAL       /FORCE:MULTIPLE /SUBSYSTEM:CONSOLE /NOLOGO /TLBID:1)
         endif ()
-        set_target_properties(${APP_NAME}
-                PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
-                OUTPUT_NAME ${OUTPUT_APP_NAME}
-        )
     endif ()
 
     set_target_properties(${APP_NAME}
