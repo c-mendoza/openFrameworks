@@ -1,14 +1,19 @@
 cmake_minimum_required(VERSION 3.28)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:>DLL")
 
-if (CMAKE_CURRENT_LIST_DIR STREQUAL CMAKE_SOURCE_DIR)
+#if (CMAKE_CURRENT_LIST_DIR STREQUAL CMAKE_SOURCE_DIR)
     project(openFrameworks)
-endif()
+#endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(OF_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 include(of_macros)
+ofDetectTarget()
 
+# --------------------------------------------------
+# Installation prefix: {OF_DIRECTORY}/install/{platform}
+# --------------------------------------------------
+ofSetInstallPrefix()
 # --------------------------------------------------
 # Source Files
 # --------------------------------------------------
@@ -87,33 +92,27 @@ endif ()
 
 add_library(of_static STATIC ${OF_SRC})
 
-# These don't seem to work
-set_target_properties(of_static PROPERTIES
-        OUTPUT_NAME "openframeworksLib$<$<CONFIG:Debug>:_debug>"
-        CXX_STANDARD 20
-        CXX_STANDARD_REQUIRED ON
-        C_STANDARD 17
-        C_STANDARD_REQUIRED ON
+# --------------------------------------------------
+# Export & Install
+# --------------------------------------------------
+
+include(CMakePackageConfigHelpers)
+
+# Export target for downstream apps
+install(TARGETS of_static
+        EXPORT openFrameworksTargets
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
 )
-if (OF_TARGET_MACOS)
-    # These don't seem to work
-    set_target_properties(of_static PROPERTIES
-            OBJCXX_STANDARD 20
-            OBJC_STANDARD 17
-    )
-endif ()
 
-# This seems to be the only thing that sets the c++ standard...
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_STANDARD_REQUIRED ON)
+# Install openFrameworks headers
+install(DIRECTORY libs/openFrameworks
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.inl"
+)
 
-
-# -------------------------------------------------- #
-# Includes                                           #
-# -------------------------------------------------- #
-
+# Install 3rd-party headers
 set(OF_LIB_NAMES
         brotli
         cairo
@@ -136,6 +135,70 @@ set(OF_LIB_NAMES
         utf8
         zlib
 )
+
+foreach(dir ${OF_LIB_NAMES})
+    install(DIRECTORY libs/${dir}/include/   # <-- note trailing slash
+            DESTINATION include/
+            FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.inl")
+endforeach()
+
+add_custom_target(build_and_install
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target install
+        DEPENDS of_static
+)
+
+# Export targets
+install(EXPORT openFrameworksTargets
+        FILE openFrameworksTargets.cmake
+        NAMESPACE openFrameworks::
+        DESTINATION lib/cmake/openFrameworks
+)
+
+# Generate the config file
+configure_package_config_file(
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/openFrameworksConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/openFrameworksConfig.cmake
+        INSTALL_DESTINATION lib/cmake/openFrameworks
+)
+
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/openFrameworksConfig.cmake
+        DESTINATION lib/cmake/openFrameworks
+)
+
+# These don't seem to work
+set_target_properties(of_static PROPERTIES
+        OUTPUT_NAME "openframeworksLib$<$<CONFIG:Debug>:_debug>"
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        C_STANDARD 17
+        C_STANDARD_REQUIRED ON
+)
+
+add_custom_command(TARGET of_static POST_BUILD
+        COMMAND ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR}
+        COMMENT "Installing openFrameworks after build"
+)
+
+if (OF_TARGET_MACOS)
+    # These don't seem to work
+    set_target_properties(of_static PROPERTIES
+            OBJCXX_STANDARD 20
+            OBJC_STANDARD 17
+    )
+endif ()
+
+# This seems to be the only thing that sets the c++ standard...
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+
+# -------------------------------------------------- #
+# Includes                                           #
+# -------------------------------------------------- #
+
 
 set(OF_HEADERS
         ${OF_DIRECTORY}/libs/openFrameworks/
@@ -174,8 +237,15 @@ set(OF_HEADERS
         ${OF_DIRECTORY}/libs/zlib/include
 )
 
-include_directories(${OF_HEADERS})
+#include_directories(${OF_HEADERS})
 
+target_include_directories(of_static
+        PUBLIC
+        $<BUILD_INTERFACE:${OF_HEADERS}>
+#        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
+
+)
 # --------------------------------------------------
 # Libraries
 # --------------------------------------------------

@@ -1,4 +1,6 @@
 include_guard(GLOBAL)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+
 include(of_detect)
 
 #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
@@ -219,12 +221,25 @@ set(OF_MACOS_BUNDLE_ID "com.example.one")
 
 macro(ofApp APP_NAME SOURCE_FILES)
     ofDetectTarget()
+    ofSetInstallPrefix()
     set(OF_APP_NAME ${APP_NAME})
     set(OUTPUT_APP_NAME ${APP_NAME})
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         set(OUTPUT_APP_NAME "${APP_NAME}_debug")
     endif ()
 
+    set(ofIncludeDir "${CMAKE_INSTALL_PREFIX}/include/openFrameworks")
+    file(GLOB children  RELATIVE "${ofIncludeDir}" "${ofIncludeDir}/*/")
+#    message("${children}")
+#    message(STATUS "Found children: ${children}")
+    include_directories(${ofIncludeDir})
+    include_directories( ${CMAKE_INSTALL_PREFIX}/include)
+    ofGetSubdirNames(subDirs ${ofIncludeDir})
+    ofPrintList(subDirs)
+#    message("-------------- ${ofIncludeDir}")
+    foreach (item ${subDirs})
+        include_directories("${ofIncludeDir}/${item}")
+    endforeach ()
     if (OF_TARGET_MACOS)
         set(PLIST_TEMPLATE "${OF_DIRECTORY}/cmake/MacOSXBundleInfo.plist.in")
         set(PLIST_OUT "${CMAKE_BINARY_DIR}/MacOSXBundleInfo.plist")
@@ -305,7 +320,7 @@ macro(ofApp APP_NAME SOURCE_FILES)
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin
             OUTPUT_NAME ${OUTPUT_APP_NAME}
     )
-    target_link_libraries(${APP_NAME} PUBLIC of_static)
+    target_link_libraries(${APP_NAME} PRIVATE openFrameworks::of_static)
 
 endmacro()
 
@@ -318,7 +333,7 @@ endfunction()
 function(ofGetSubdirNames result_var dir)
     # Get all children of dir
     file(GLOB children RELATIVE "${dir}" "${dir}/*")
-
+#    message("${children}")
     set(subdirs "")
     foreach (child ${children})
         if (IS_DIRECTORY "${dir}/${child}")
@@ -343,3 +358,17 @@ endfunction()
 #    set(${result_var} "${filtered_list}" PARENT_SCOPE)
 #endfunction()
 
+function(ofSetInstallPrefix)
+    if (OF_TARGET_MACOS)
+        set(_OF_PLATFORM "macos")
+    elseif (OF_TARGET_VS)
+        set(_OF_PLATFORM "vs")
+    elseif (OF_TARGET_LINUX)
+        set(_OF_PLATFORM "linux")
+    else()
+        set(_OF_PLATFORM "unknown")
+    endif()
+    message("Install Prefix: ${OF_DIRECTORY}/install/${_OF_PLATFORM}")
+    set(CMAKE_INSTALL_PREFIX "${OF_DIRECTORY}/install/${_OF_PLATFORM}" CACHE PATH "Install path prefix" FORCE)
+
+endfunction()
