@@ -8,12 +8,11 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:>DLL")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(OF_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 include(of_macros)
-ofDetectTarget()
 
 # --------------------------------------------------
 # Installation prefix: {OF_DIRECTORY}/install/{platform}
 # --------------------------------------------------
-ofSetInstallPrefix()
+#ofSetInstallPrefix()
 # --------------------------------------------------
 # Source Files
 # --------------------------------------------------

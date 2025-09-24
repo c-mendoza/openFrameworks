@@ -1,7 +1,7 @@
 include_guard(GLOBAL)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
-
 include(of_detect)
+
 
 #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 if (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo" OR
@@ -220,20 +220,27 @@ set(OF_APP_NAME)
 set(OF_MACOS_BUNDLE_ID "com.example.one")
 
 macro(ofApp APP_NAME SOURCE_FILES)
-    ofDetectTarget()
-    ofSetInstallPrefix()
+#    ofDetectTarget()
+#    ofSetInstallPrefix()
+
+    # This seems to be the only thing that sets the c++ standard...
+    set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_C_STANDARD 17)
+    set(CMAKE_C_STANDARD_REQUIRED ON)
+
     set(OF_APP_NAME ${APP_NAME})
     set(OUTPUT_APP_NAME ${APP_NAME})
     if (CMAKE_BUILD_TYPE MATCHES Debug)
         set(OUTPUT_APP_NAME "${APP_NAME}_debug")
     endif ()
 
-    set(ofIncludeDir "${CMAKE_INSTALL_PREFIX}/include/openFrameworks")
+    set(ofIncludeDir "${OF_INSTALL_PREFIX}/include/openFrameworks")
     file(GLOB children  RELATIVE "${ofIncludeDir}" "${ofIncludeDir}/*/")
 #    message("${children}")
 #    message(STATUS "Found children: ${children}")
     include_directories(${ofIncludeDir})
-    include_directories( ${CMAKE_INSTALL_PREFIX}/include)
+    include_directories( ${OF_INSTALL_PREFIX}/include)
     ofGetSubdirNames(subDirs ${ofIncludeDir})
     ofPrintList(subDirs)
 #    message("-------------- ${ofIncludeDir}")
@@ -358,6 +365,7 @@ endfunction()
 #    set(${result_var} "${filtered_list}" PARENT_SCOPE)
 #endfunction()
 
+# Target must be set or ofDetectTarget needs to be called prior to using this function
 function(ofSetInstallPrefix)
     if (OF_TARGET_MACOS)
         set(_OF_PLATFORM "macos")
@@ -369,6 +377,10 @@ function(ofSetInstallPrefix)
         set(_OF_PLATFORM "unknown")
     endif()
     message("Install Prefix: ${OF_DIRECTORY}/install/${_OF_PLATFORM}")
-    set(CMAKE_INSTALL_PREFIX "${OF_DIRECTORY}/install/${_OF_PLATFORM}" CACHE PATH "Install path prefix" FORCE)
+    set(OF_INSTALL_PREFIX "${OF_DIRECTORY}/install/${_OF_PLATFORM}" CACHE PATH "OF install path prefix" FORCE)
+    set(CMAKE_INSTALL_PREFIX "${OF_DIRECTORY}/install/${_OF_PLATFORM}" CACHE PATH "OF install path prefix" FORCE)
 
 endfunction()
+
+ofDetectTarget()
+ofSetInstallPrefix()
