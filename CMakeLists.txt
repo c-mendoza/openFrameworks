@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:>DLL")
+set(CMAKE_CONFIGURATION_TYPES "RelWithDebInfo;Debug;Release;")
 
 #if (CMAKE_CURRENT_LIST_DIR STREQUAL CMAKE_SOURCE_DIR)
     project(openFrameworks)
@@ -136,8 +137,8 @@ set(OF_LIB_NAMES
 )
 
 foreach(dir ${OF_LIB_NAMES})
-    install(DIRECTORY libs/${dir}/include/   # <-- note trailing slash
-            DESTINATION include/
+    install(DIRECTORY libs/${dir}/include
+            DESTINATION include
             FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.inl")
 endforeach()
 

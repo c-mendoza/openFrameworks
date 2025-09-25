@@ -199,3 +199,5 @@ libs/openFrameworksCompiled/project/android/build-*/
 #tests/*/bin
 #!tests/*/bin/data/
 install/
+
+cmake-build-*/

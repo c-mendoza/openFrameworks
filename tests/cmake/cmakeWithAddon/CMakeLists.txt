@@ -6,14 +6,14 @@ get_filename_component(OF_DIRECTORY ../../../ REALPATH)
 message("OF DIRECTORY: ${OF_DIRECTORY}")
 
 # Declare your project
-project(cmakeTest)
+project("CMakeAddon")
 
 # Include the main CMakeLists, this adds OF as a target and includes the helper macros
 include(${OF_DIRECTORY}/cmake/of_macros.cmake)
 
 # This adds the of source to the build, but excludes it from compilation.
 # Very useful for debugging.
-add_subdirectory(${OF_DIRECTORY} "of_build" EXCLUDE_FROM_ALL)
+add_subdirectory(${OF_DIRECTORY} "of" EXCLUDE_FROM_ALL)
 
 # This will find the openFrameworks library, headers and dependencies
 find_package(openFrameworks REQUIRED)
@@ -25,6 +25,6 @@ file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 ofApp(${PROJECT_NAME} "${SOURCES}")
 
 # This function will include an addon. Please note that some addons may not work at the moment. ofxPoco will work though.
-ofIncludeAddon(ofxPoco)
+ofIncludeAddon(ofxOpenCv)
 
 #that's it!
