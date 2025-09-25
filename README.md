@@ -1,6 +1,18 @@
 openFrameworks + CMake
 ================
+<!-- TOC -->
 
+- [openFrameworks + CMake](#openframeworks--cmake)
+    - [Status](#status)
+        - [Build](#build)
+        - [Addons](#addons)
+    - [Usage](#usage)
+        - [Building with terminal](#building-with-terminal)
+        - [Building with CLion](#building-with-clion)
+    - [Structure](#structure)
+    - [Disclaimers](#disclaimers)
+
+<!-- /TOC -->
 This is an experimental openFrameworks branch that adds a CMake build system.
 
 The goals of this build system are:
@@ -11,22 +23,35 @@ The goals of this build system are:
 * Make openFrameworks an easily installable package, enabling its integration into other
   projects (imagine OF in a JUCE app, for example).
 
-## Structure
+## Status
 
-The fork adds the following files:
+### Build
 
-- A
-  `CMakeLists.txt` file at the openFrameworks root. This file configures and builds the OF library and creates the installation rules.
-- A `cmake` folder that contains some helper files.
-  `of_macros.cmake` is the most interesting one at the moment.
-- A `tests/cmake` folder, which has tests/examples of the build system.
+|   Platform    | Status | Notes                                                           |
+|:-------------:|:------:|-----------------------------------------------------------------|
+|     MacOS     |   ✅    | Only tested on Sequoia (15.6)                                   |
+|    Windows    |   ⚠️   | Only `Release` or `RelWithDebInfo` builds. `Debug` builds crash | 
+| Anything else |   ❌    | Not started yet.                                                |
 
-## Quickstart
+### Addons
+
+* There is limited addon support in the app's CMakeLists file via the function `ofIncludeAddon`.  The system is able to load addons
+  that follow the "standard" addon file structure and which don't require anything other than
+  compilation of sources and linking to provided libraries.
+  * This means that not every addon will
+    work! For the moment, any sources and headers that `ofIncludeAddon` doesn't pick up you can be
+    added manually in your app's `CMakeLists.txt`.
+* Addons can be *global* (from the `openFrameworks/addons` folder) or
+  *local* (the addon's folder is located in the root of your ofApp project).
+  * When an addon exists both locally and globally, the local addon is given preference by
+    `ofIncludeAddon`.
+
+## Usage
 
 1. Clone this branch.
 2. Download the OF libraries using the appropriate script.
 
-### Using terminal
+### Building with terminal
 
 1. Open a terminal in the openFrameworks root directory and type the following:
 
@@ -48,7 +73,7 @@ cmake --build cmake-build-release --target cmakeTest -j 8
 
 That should build the test app in the `bin` directory.
 
-### Using CLion
+### Building with CLion
 
 I highly recommend using [CLion](https://www.jetbrains.com/clion/) as an IDE!
 
@@ -64,40 +89,18 @@ Now we will build the test ofApp:
 7. Again, add a Debug and Release configuration.
 8. Select the Release config, select `cmakeTest` as a target and press the Run button.
 
-## Status
+## Structure
 
-### Build
-|   Platform    | Status | Notes                                                           |
-|:-------------:|:------:|-----------------------------------------------------------------|
-|     MacOS     |   ✅    | Only tested on Sequoia (15.6)                                   |
-|    Windows    |   ⚠️   | Only `Release` or `RelWithDebInfo` builds. `Debug` builds crash | 
-| Anything else |   ❌    | Not started yet.                                                |
+The fork adds the following files:
 
-### Addons
+- A
+  `CMakeLists.txt` file at the openFrameworks root. This file configures and builds the OF library and creates the installation rules.
+- A `cmake` folder that contains some helper files.
+  `of_macros.cmake` is the most interesting one at the moment.
+- A `tests/cmake` folder, which has tests/examples of the build system.
 
-* There is limited addon support in the app's CMakeLists file via the function `ofIncludeAddon`.
-* The system is able to load addons
-  that follow the "standard" addon file structure and which don't require anything other than compilation of sources and linking of provided libraries.
-* Addons can be *global* (from the `openFrameworks/addons` folder) or
-  *local* (the addon's folder is located in the root of your ofApp project). 
-* When an addon exists both locally and globally, the local addon is given preference by 
-  `ofIncludeAddon`.
 
-## Getting Started
-
-1. Clone this branch.
-2. Go to `{of_root}/tests/cmake/cmakeTest` and open `CMakeLists.txt` in your CMake-capable IDE.
-3. Config, build and run.
-
-If you are using CLion, the process would be:
-
-1. Open the CMakeLists.txt file *as a project*.
-2. The CMake Profiles window should show up. Add a Release profile if you want.
-3. The project will load. In the targets dropdown, make sure that `cmakeTest` is selected and
-   build/run.
-
-## Organization
 
 ## Disclaimers
 
-I am not a CMake expert, so any suggestions for improvements are welcomed!
+I am not a CMake expert, so any suggestions for improvements are welcome!
