@@ -136,10 +136,37 @@ set(OF_LIB_NAMES
         zlib
 )
 
-foreach(dir ${OF_LIB_NAMES})
-    install(DIRECTORY libs/${dir}/include
+if (OF_TARGET_VS)
+    list(APPEND OF_LIB_NAMES videoInput)
+endif()
+
+foreach(item ${OF_LIB_NAMES})
+#    message("ITEM:::::: ${item}")
+    install(DIRECTORY libs/${item}/include
             DESTINATION include
             FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.inl")
+endforeach()
+
+foreach(item ${OF_LIB_NAMES})
+    set(WIN_ARCH "x64") # hardcoded for now
+
+    if (OF_TARGET_VS)
+        install(DIRECTORY libs/${item}/lib/vs/${WIN_ARCH}/
+                DESTINATION lib
+                FILES_MATCHING PATTERN "*.lib")
+    elseif (OF_TARGET_MACOS)
+        install(DIRECTORY libs/${item}/lib/macos/
+                DESTINATION lib
+                FILES_MATCHING PATTERN "*.a" PATTERN "*.dylib")
+        set(XCF_PATH "${OF_DIRECTORY}/libs/${item}/lib/macos/${item}.xcframework")
+        if (EXISTS ${XCF_PATH})
+            install(DIRECTORY ${XCF_PATH} DESTINATION lib)
+        endif()
+    elseif (OF_TARGET_LINUX)
+        install(DIRECTORY libs/${dir}/lib/linux/
+                DESTINATION lib
+                FILES_MATCHING PATTERN "*.a" PATTERN "*.so")
+    endif()
 endforeach()
 
 add_custom_target(build_and_install
@@ -243,7 +270,7 @@ target_include_directories(of_static
         PUBLIC
         $<BUILD_INTERFACE:${OF_HEADERS}>
 #        $<INSTALL_INTERFACE:include>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/include>
 
 )
 # --------------------------------------------------
@@ -331,12 +358,12 @@ elseif (OF_TARGET_VS)
             rtaudio.lib
             tess2.lib
             uriparser.lib
-            #            videoInput$<$<CONFIG:Debug>:D>.lib
-            videoInput.lib
-            zlib.lib
+            videoInput$<$<CONFIG:Debug>:D>.lib
+#            videoInput.lib
+#            zlib.lib
     )
 
-    #    message(STATUS ${OF_LIB_FILES})
+#        message(STATUS ${OF_LIB_FILES})
     set(WIN_ARCH "x64")
     list(APPEND OF_LIB_NAMES "videoInput")
     include_directories(${OF_DIRECTORY}/libs/videoInput/include)
@@ -346,9 +373,20 @@ elseif (OF_TARGET_VS)
     foreach (LIB ${OF_LIB_NAMES})
         set(LIB_DIR "${OF_DIRECTORY}/libs/${LIB}/lib/vs/${WIN_ARCH}")
         list(APPEND OF_LIB_DIRS ${LIB_DIR})
+        target_link_directories(of_static
+                PUBLIC
+                $<BUILD_INTERFACE:${OF_DIRECTORY}/libs/${LIB}/lib/vs/${WIN_ARCH}>
+                $<INSTALL_INTERFACE:lib>
+        )
+        message("$<INSTALL_INTERFACE:vs/lib/${LIB}")
     endforeach ()
-    target_link_directories(of_static PUBLIC ${OF_LIB_DIRS})
-
+#    target_link_directories(of_static
+#            INTERFACE
+#            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/libs/curl/lib/vs/x64>
+#            $<INSTALL_INTERFACE:lib>    # <-- tells consumers to use install tree
+#    )
+#    target_link_directories(of_static PUBLIC ${OF_LIB_DIRS})
+#    message("KAJSHKJHSKJ --- ${OF_LIB_FILES}")
     target_link_libraries(of_static PUBLIC ${OF_LIB_FILES})
     #
     #        message(STATUS "Searching for ${LIB} in ${LIB_DIR}")
