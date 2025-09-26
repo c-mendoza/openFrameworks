@@ -55,29 +55,25 @@ function(ofIncludeAddon addonName)
                 "${PATH_SRC}/*.cpp"
                 "${PATH_SRC}/*.cc"
                 "${PATH_SRC}/*.c"
-                #                "${PATH_LIBS}/*.cpp"
-                #                "${PATH_LIBS}/*.cc"
-                #                "${PATH_LIBS}/*.c"
+                "${PATH_SRC}/*.m"
+                "${PATH_SRC}/*.mm"
         )
-
-        #        file(GLOB_RECURSE addonLibsSrc
-        #                "${PATH_LIBS}/*.cpp"
-        #                "${PATH_LIBS}/*.cc")
-        #        list(APPEND addonSrc ${OFX_ADDON_CPP}
-        #                ${OFX_ADDON_LIBS_CPP})
 
         #    set(libs_subdirs)
         ofGetSubdirNames(libs_subdirs ${PATH_LIBS})
-
         list(LENGTH addonSrc list_length)
         if (list_length EQUAL 0)
             #            message("List is empty")
         else ()
-            #            message("Addon ${addonName}")
-            #            ofPrintList(addonSrc)
-            add_library(${addonName} STATIC ${addonSrc})
-            target_link_libraries(${OF_APP_NAME} PRIVATE ${addonName})
-            add_dependencies(${OF_APP_NAME} ${addonName})
+            ### So creating a separate lib for each addon currently poses problems, so I am
+            ### disabling this. Maybe per-addon compile flags could help.
+            ### Instead, we are adding the addon sources to the ofApp build (which is the way that OF does it)
+#            message("Addon ${addonName}")
+#            ofPrintList(addonSrc)
+#            add_library(${addonName} STATIC ${addonSrc})
+#            target_link_libraries(${OF_APP_NAME} PRIVATE ${addonName})
+#            add_dependencies(${OF_APP_NAME} ${addonName})
+            target_sources(${OF_APP_NAME} PRIVATE ${addonSrc})
         endif ()
 
         foreach (item ${libs_subdirs})
@@ -139,18 +135,30 @@ function(ofAddGenericLib path target)
         if (OF_TARGET_MACOS)
             file(GLOB foundLibs
                     "${path}/lib/macos/*.a"
-                    "${path}/lib/macos/*.xcframework"
+                    "${path}/lib/macos/*.*framework"
+                    "${path}/lib/osx/*.a"
+                    "${path}/lib/osx/*.*framework"
             )
-            #            message(STATUS ${theLibs})
+            message(STATUS ${foundLibs})
             target_link_libraries(${target} PRIVATE ${foundLibs})
+            foreach (lib ${foundLibs})
+                get_filename_component(ext ${lib} LAST_EXT)
+#                message(WARNING ${ext})
+                if (${ext} STREQUAL ".framework" OR ${ext} STREQUAL ".xcframework")
+#                    message(WARNING "eyyyopooo ${lib}/Headers")
+                    target_include_directories(${target} PRIVATE "${lib}/Headers")
+                endif ()
+            endforeach ()
+#            target_link_directories(${target} PRIVATE "${path}/lib/macos/")
+#            target_link_directories(${target} PRIVATE "${path}/lib/osx/")
         elseif (OF_TARGET_VS)
             # We are only linking release libs at the moment
             file(GLOB foundLibs
                     "${path}/lib/vs/x64/Release/*.lib"
             )
-            message("LIBS:")
-            ofPrintList(foundLibs)
-            message("TARGET: ${target}")
+#            message("LIBS:")
+#            ofPrintList(foundLibs)
+#            message("TARGET: ${target}")
             target_link_libraries(${target} PRIVATE ${foundLibs})
 
         endif ()
@@ -161,6 +169,8 @@ function(ofAddGenericLib path target)
                 "${path}/src/*.cpp"
                 "${path}/src/*.cc"
                 "${path}/src/*.c"
+                "${path}/src/*.m"
+                "${path}/src/*.mm"
         )
         target_sources(${target} PUBLIC ${libSources})
     endif ()
@@ -266,6 +276,7 @@ macro(ofApp APP_NAME SOURCE_FILES)
         target_compile_options(${APP_NAME} PUBLIC
                 $<$<CONFIG:Debug>:-O0>
                 $<$<CONFIG:Release>:-O3>
+                -fobjc-arc
                 $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -stdlib=libc++ -fobjc-arc -x objective-c++>
                 $<$<COMPILE_LANGUAGE:C>:-x objective-c>
                 -Wno-deprecated-declarations
