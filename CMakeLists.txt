@@ -378,7 +378,7 @@ elseif (OF_TARGET_VS)
                 $<BUILD_INTERFACE:${OF_DIRECTORY}/libs/${LIB}/lib/vs/${WIN_ARCH}>
                 $<INSTALL_INTERFACE:lib>
         )
-        message("$<INSTALL_INTERFACE:vs/lib/${LIB}")
+#        message("$<INSTALL_INTERFACE:vs/lib/${LIB}")
     endforeach ()
 #    target_link_directories(of_static
 #            INTERFACE
