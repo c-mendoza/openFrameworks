@@ -68,11 +68,11 @@ function(ofIncludeAddon addonName)
             ### So creating a separate lib for each addon currently poses problems, so I am
             ### disabling this. Maybe per-addon compile flags could help.
             ### Instead, we are adding the addon sources to the ofApp build (which is the way that OF does it)
-#            message("Addon ${addonName}")
-#            ofPrintList(addonSrc)
-#            add_library(${addonName} STATIC ${addonSrc})
-#            target_link_libraries(${OF_APP_NAME} PRIVATE ${addonName})
-#            add_dependencies(${OF_APP_NAME} ${addonName})
+            #            message("Addon ${addonName}")
+            #            ofPrintList(addonSrc)
+            #            add_library(${addonName} STATIC ${addonSrc})
+            #            target_link_libraries(${OF_APP_NAME} PRIVATE ${addonName})
+            #            add_dependencies(${OF_APP_NAME} ${addonName})
             target_sources(${OF_APP_NAME} PRIVATE ${addonSrc})
         endif ()
 
@@ -143,9 +143,9 @@ function(ofAddGenericLib path target)
             target_link_libraries(${target} PRIVATE ${foundLibs})
             foreach (lib ${foundLibs})
                 get_filename_component(ext ${lib} LAST_EXT)
-#                message(WARNING ${ext})
+                #                message(WARNING ${ext})
                 if (${ext} STREQUAL ".framework" OR ${ext} STREQUAL ".xcframework")
-#                    message(WARNING "eyyyopooo ${lib}/Headers")
+                    #                    message(WARNING "eyyyopooo ${lib}/Headers")
                     target_include_directories(${target} PRIVATE "${lib}/Headers")
                 endif ()
             endforeach ()
@@ -235,8 +235,8 @@ set(OF_APP_NAME)
 set(OF_MACOS_BUNDLE_ID "com.example.one")
 
 macro(ofApp APP_NAME SOURCE_FILES)
-#    ofDetectTarget()
-#    ofSetInstallPrefix()
+    #    ofDetectTarget()
+    #    ofSetInstallPrefix()
 
     # This seems to be the only thing that sets the c++ standard...
     set(CMAKE_CXX_STANDARD 20)
@@ -251,14 +251,14 @@ macro(ofApp APP_NAME SOURCE_FILES)
     endif ()
 
     set(ofIncludeDir "${OF_INSTALL_PREFIX}/include/openFrameworks")
-    file(GLOB children  RELATIVE "${ofIncludeDir}" "${ofIncludeDir}/*/")
-#    message("${children}")
-#    message(STATUS "Found children: ${children}")
+    file(GLOB children RELATIVE "${ofIncludeDir}" "${ofIncludeDir}/*/")
+    #    message("${children}")
+    #    message(STATUS "Found children: ${children}")
     include_directories(${ofIncludeDir})
-    include_directories( ${OF_INSTALL_PREFIX}/include)
+    include_directories(${OF_INSTALL_PREFIX}/include)
     ofGetSubdirNames(subDirs ${ofIncludeDir})
     ofPrintList(subDirs)
-#    message("-------------- ${ofIncludeDir}")
+    #    message("-------------- ${ofIncludeDir}")
     foreach (item ${subDirs})
         include_directories("${ofIncludeDir}/${item}")
     endforeach ()
@@ -317,24 +317,35 @@ macro(ofApp APP_NAME SOURCE_FILES)
         #        )
 
     elseif (OF_TARGET_VS)
+        #/Gm- /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /std:c++20 /Fo"obj\x64\Debug\\Build\src\\Debug\\" /Fd"obj\x64\Debug\vc143.pdb" /external:W3 /Gd /TP /FC /errorReport:prompt /Zc:__cplusplus /Bt /Zc:__cplusplus src\main.cpp src\ofApp.cpp src\App.cpp src\DoubleBufferedBufferObject.cpp src\Model.cpp src\OrbitalCam.cpp src\OrbitDataStorage.cpp src\RDPixelSource.cpp src\RDPixelSourceCam.cpp src\RDPixelSourceUI.cpp src\SatDataModule.cpp (TaskId:51)
         add_executable(${APP_NAME} "${SOURCE_FILES}")
         target_compile_options(${APP_NAME} PUBLIC
-                $<$<CONFIG:Debug>:/Od /Zl>
-                $<$<CONFIG:Release>:/O2>
+                $<$<CONFIG:Debug>:/D _DEBUG /GS /TP /external:W3   >
+                $<$<CONFIG:Debug>:/Od /ZI>
+                $<$<CONFIG:Release>:/O2 /W1>
                 $<$<COMPILE_LANGUAGE:CXX>:/std:c++20>
                 $<$<COMPILE_LANGUAGE:C>:/std:c17>
-                /Gm-
-                /WX- /Zc:forScope /Gd /FC /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise
-                -U__MINGW64__
-                -U__MINGW32__)
+                /WX- /Zc:forScope /Gd /FC /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /fp:precise)
+        #                -U__MINGW64__
+        #                -U__MINGW32__)
         #        target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE /MACHINE:X64 /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:MSVCRT /NODEFAULTLIB:libcmt /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD /INCREMENTAL  /SUBSYSTEM:CONSOLE /NOLOGO )
         #        target_link_options(${APP_NAME} PUBLIC /DEBUG /MACHINE:X64 /NODEFAULTLIB:"atlthunk.lib" /NODEFAULTLIB:"msvcrt" /NODEFAULTLIB:"libcmt" /NODEFAULTLIB:"LIBC" /NODEFAULTLIB:"LIBCMTD" /INCREMENTAL)
+
+        #        /NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:MSVCRT /NODEFAULTLIB:libcmt /NODEFAULTLIB:LIBC /NODEFAULTLIB:LIBCMTD
+        #/NODEFAULTLIB:libucrtd.lib
+        #/NODEFAULTLIB:libvcruntimed.lib
+
+
         target_compile_definitions(${APP_NAME} PUBLIC
                 WIN32 CURL_STATICLIB URI_STATIC_BUILD _HAS_STREAM_INSERTION_OPERATORS_DELETED_IN_CXX20 _CONSOLE POCO_STATIC CAIRO_WIN32_STATIC_BUILD DISABLE_SOME_FLOATING_POINT OF_NO_FMOD GLM_FORCE_CTOR_INIT GLM_ENABLE_EXPERIMENTAL _UNICODE UNICODE FREEIMAGE_LIB) #GLEW_STATIC
         if (CMAKE_BUILD_TYPE MATCHES "Debug")
-            target_link_options(${APP_NAME} PUBLIC /MACHINE:X64 /INCREMENTAL /FORCE:MULTIPLE)
+            target_link_options(${APP_NAME} PUBLIC /MACHINE:X64 /INCREMENTAL /FORCE:MULTIPLE /TLBID:1 /LTCG:OFF
+
+            )
         else ()
-            target_link_options(${APP_NAME} PUBLIC /DYNAMICBASE:NO /MACHINE:X64 /INCREMENTAL       /FORCE:MULTIPLE /SUBSYSTEM:CONSOLE /NOLOGO /TLBID:1)
+            target_link_options(${APP_NAME} PUBLIC
+                    /DYNAMICBASE:NO
+                    /MACHINE:X64 /INCREMENTAL /FORCE:MULTIPLE /SUBSYSTEM:CONSOLE /NOLOGO /TLBID:1)
         endif ()
     endif ()
 
@@ -356,7 +367,7 @@ endfunction()
 function(ofGetSubdirNames result_var dir)
     # Get all children of dir
     file(GLOB children RELATIVE "${dir}" "${dir}/*")
-#    message("${children}")
+    #    message("${children}")
     set(subdirs "")
     foreach (child ${children})
         if (IS_DIRECTORY "${dir}/${child}")
@@ -389,9 +400,9 @@ function(ofSetInstallPrefix)
         set(_OF_PLATFORM "vs")
     elseif (OF_TARGET_LINUX)
         set(_OF_PLATFORM "linux")
-    else()
+    else ()
         set(_OF_PLATFORM "unknown")
-    endif()
+    endif ()
     message("Install Prefix: ${OF_DIRECTORY}/install/${_OF_PLATFORM}")
     set(OF_INSTALL_PREFIX "${OF_DIRECTORY}/install/${_OF_PLATFORM}" CACHE PATH "OF install path prefix" FORCE)
     set(CMAKE_INSTALL_PREFIX "${OF_DIRECTORY}/install/${_OF_PLATFORM}" CACHE PATH "OF install path prefix" FORCE)

@@ -3,7 +3,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:>DLL")
 set(CMAKE_CONFIGURATION_TYPES "RelWithDebInfo;Debug;Release;")
 
 #if (CMAKE_CURRENT_LIST_DIR STREQUAL CMAKE_SOURCE_DIR)
-    project(openFrameworks)
+project(openFrameworks)
 #endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -138,16 +138,16 @@ set(OF_LIB_NAMES
 
 if (OF_TARGET_VS)
     list(APPEND OF_LIB_NAMES videoInput)
-endif()
+endif ()
 
-foreach(item ${OF_LIB_NAMES})
-#    message("ITEM:::::: ${item}")
+foreach (item ${OF_LIB_NAMES})
+    #    message("ITEM:::::: ${item}")
     install(DIRECTORY libs/${item}/include
             DESTINATION include
             FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.inl")
-endforeach()
+endforeach ()
 
-foreach(item ${OF_LIB_NAMES})
+foreach (item ${OF_LIB_NAMES})
     set(WIN_ARCH "x64") # hardcoded for now
 
     if (OF_TARGET_VS)
@@ -161,13 +161,13 @@ foreach(item ${OF_LIB_NAMES})
         set(XCF_PATH "${OF_DIRECTORY}/libs/${item}/lib/macos/${item}.xcframework")
         if (EXISTS ${XCF_PATH})
             install(DIRECTORY ${XCF_PATH} DESTINATION lib)
-        endif()
+        endif ()
     elseif (OF_TARGET_LINUX)
         install(DIRECTORY libs/${dir}/lib/linux/
                 DESTINATION lib
                 FILES_MATCHING PATTERN "*.a" PATTERN "*.so")
-    endif()
-endforeach()
+    endif ()
+endforeach ()
 
 add_custom_target(build_and_install
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target install
@@ -269,7 +269,7 @@ set(OF_HEADERS
 target_include_directories(of_static
         PUBLIC
         $<BUILD_INTERFACE:${OF_HEADERS}>
-#        $<INSTALL_INTERFACE:include>
+        #        $<INSTALL_INTERFACE:include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_PREFIX}/include/include>
 
 )
@@ -342,28 +342,28 @@ elseif (OF_TARGET_VS)
             libcairo.lib
             libcurl.lib
             fmt.lib
-            #            FreeImage$<$<CONFIG:Debug>:D>.lib
-            FreeImage.lib
-            #            freetype$<$<CONFIG:Debug>:d>.lib
-            freetype.lib
+            FreeImage$<$<CONFIG:Debug>:D>.lib
+            #            FreeImage.lib
+            freetype$<$<CONFIG:Debug>:d>.lib
+            #            freetype.lib
             libglew32.lib
             glfw3.lib
             libpng.lib
             libcrypto.lib
             libssl.lib
             libpixman-1.lib
-            #            pugixml$<$<CONFIG:Debug>:D>.lib
-            pugixml.lib
-            #            rtaudio$<$<CONFIG:Debug>:D>.lib
-            rtaudio.lib
+            pugixml$<$<CONFIG:Debug>:D>.lib
+            #            pugixml.lib
+            rtaudio$<$<CONFIG:Debug>:D>.lib
+            #            rtaudio.lib
             tess2.lib
             uriparser.lib
             videoInput$<$<CONFIG:Debug>:D>.lib
-#            videoInput.lib
-#            zlib.lib
+            #            videoInput.lib
+            zlib.lib
     )
 
-#        message(STATUS ${OF_LIB_FILES})
+    #        message(STATUS ${OF_LIB_FILES})
     set(WIN_ARCH "x64")
     list(APPEND OF_LIB_NAMES "videoInput")
     include_directories(${OF_DIRECTORY}/libs/videoInput/include)
@@ -378,15 +378,15 @@ elseif (OF_TARGET_VS)
                 $<BUILD_INTERFACE:${OF_DIRECTORY}/libs/${LIB}/lib/vs/${WIN_ARCH}>
                 $<INSTALL_INTERFACE:lib>
         )
-#        message("$<INSTALL_INTERFACE:vs/lib/${LIB}")
+        #        message("$<INSTALL_INTERFACE:vs/lib/${LIB}")
     endforeach ()
-#    target_link_directories(of_static
-#            INTERFACE
-#            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/libs/curl/lib/vs/x64>
-#            $<INSTALL_INTERFACE:lib>    # <-- tells consumers to use install tree
-#    )
-#    target_link_directories(of_static PUBLIC ${OF_LIB_DIRS})
-#    message("KAJSHKJHSKJ --- ${OF_LIB_FILES}")
+    #    target_link_directories(of_static
+    #            INTERFACE
+    #            $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/libs/curl/lib/vs/x64>
+    #            $<INSTALL_INTERFACE:lib>    # <-- tells consumers to use install tree
+    #    )
+    #    target_link_directories(of_static PUBLIC ${OF_LIB_DIRS})
+    #    message("KAJSHKJHSKJ --- ${OF_LIB_FILES}")
     target_link_libraries(of_static PUBLIC ${OF_LIB_FILES})
     #
     #        message(STATUS "Searching for ${LIB} in ${LIB_DIR}")
@@ -441,15 +441,14 @@ if (OF_TARGET_MACOS)
 
 elseif (OF_TARGET_VS)
     target_compile_definitions(of_static PUBLIC
-            WIN32 CURL_STATICLIB URI_STATIC_BUILD _HAS_STREAM_INSERTION_OPERATORS_DELETED_IN_CXX20 _CONSOLE POCO_STATIC CAIRO_WIN32_STATIC_BUILD DISABLE_SOME_FLOATING_POINT OF_NO_FMOD GLM_FORCE_CTOR_INIT GLM_ENABLE_EXPERIMENTAL _UNICODE UNICODE FREEIMAGE_LIB ) # GLEW_STATIC
+            WIN32 CURL_STATICLIB URI_STATIC_BUILD _HAS_STREAM_INSERTION_OPERATORS_DELETED_IN_CXX20 _CONSOLE POCO_STATIC CAIRO_WIN32_STATIC_BUILD DISABLE_SOME_FLOATING_POINT OF_NO_FMOD GLM_FORCE_CTOR_INIT GLM_ENABLE_EXPERIMENTAL _UNICODE UNICODE FREEIMAGE_LIB) # GLEW_STATIC
     target_compile_options(of_static PUBLIC
-            #            $<$<CONFIG:Debug>:/D _DEBUG>
-            $<$<CONFIG:Debug>:/Od /Zl>
-            $<$<CONFIG:Release>:/O2>
+            $<$<CONFIG:Debug>:/D _DEBUG /GS /TP /external:W3>
+            $<$<CONFIG:Debug>:/Od /ZI>
+            $<$<CONFIG:Release>:/O2 /W1>
             $<$<COMPILE_LANGUAGE:CXX>:/std:c++20>
             $<$<COMPILE_LANGUAGE:C>:/std:c17>
-            /Gm-
-            /WX- /Zc:forScope /Gd /FC /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /W3 /fp:precise)
+            /WX- /Zc:forScope /Gd /FC /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /fp:precise)
     target_link_options(of_static PUBLIC /MACHINE:X64 /NOLOGO)
 
 endif ()
