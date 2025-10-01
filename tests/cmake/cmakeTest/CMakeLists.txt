@@ -24,7 +24,4 @@ file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 # This creates your app! Give it a name and pass it the list of sources
 ofApp(${PROJECT_NAME} "${SOURCES}")
 
-# This function will include an addon. Please note that some addons may not work at the moment. ofxPoco will work though.
-ofIncludeAddon(ofxPoco)
-
 #that's it!
