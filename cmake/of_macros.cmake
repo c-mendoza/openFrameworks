@@ -149,16 +149,21 @@ function(ofAddGenericLib path target)
                     target_include_directories(${target} PRIVATE "${lib}/Headers")
                 endif ()
             endforeach ()
-#            target_link_directories(${target} PRIVATE "${path}/lib/macos/")
-#            target_link_directories(${target} PRIVATE "${path}/lib/osx/")
+            #            target_link_directories(${target} PRIVATE "${path}/lib/macos/")
+            #            target_link_directories(${target} PRIVATE "${path}/lib/osx/")
         elseif (OF_TARGET_VS)
-            # We are only linking release libs at the moment
-            file(GLOB foundLibs
-                    "${path}/lib/vs/x64/Release/*.lib"
-            )
-#            message("LIBS:")
-#            ofPrintList(foundLibs)
-#            message("TARGET: ${target}")
+            if (CMAKE_BUILD_TYPE MATCHES Debug)
+                file(GLOB foundLibs
+                        "${path}/lib/vs/x64/Debug/*.lib"
+                )
+            else ()
+                file(GLOB foundLibs
+                        "${path}/lib/vs/x64/Release/*.lib"
+                )
+            endif ()
+            #            message("LIBS:")
+            #            ofPrintList(foundLibs)
+            #            message("TARGET: ${target}")
             target_link_libraries(${target} PRIVATE ${foundLibs})
 
         endif ()
