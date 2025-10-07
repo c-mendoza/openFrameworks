@@ -27,29 +27,47 @@ The goals of this build system are:
 
 ### Build
 
-|   Platform    | Status | Notes                                                           |
-|:-------------:|:------:|-----------------------------------------------------------------|
-|     MacOS     |   ✅    | Only tested on Sequoia (15.6)                                   |
-|    Windows    |   ⚠️   | Only `Release` or `RelWithDebInfo` builds. `Debug` builds crash | 
-| Anything else |   ❌    | Not started yet.                                                |
+|   Platform    | Status | Notes                                                                                                     |
+|:-------------:|:------:|-----------------------------------------------------------------------------------------------------------|
+|     MacOS     |   ✅    | Only tested on Sequoia (15.6)                                                                             |
+|    Windows    |   ⚠️   | VS only (no msys2). Only `Release` or `RelWithDebInfo` builds. `Debug` will build, but executables crash. | 
+| Anything else |   ❌    | Not started yet.                                                                                          |
 
 ### Addons
 
-* There is limited addon support in the app's CMakeLists file via the function `ofIncludeAddon`.  The system is able to load addons
+* There is limited addon support in the app's CMakeLists file via the function
+  `ofIncludeAddon`. The system is able to load addons
   that follow the "standard" addon file structure and which don't require anything other than
   compilation of sources and linking to provided libraries.
-  * This means that not every addon will
-    work! For the moment, any sources and headers that `ofIncludeAddon` doesn't pick up you can be
-    added manually in your app's `CMakeLists.txt`.
+    * This means that not every addon will
+      work! For the moment, any sources and headers that `ofIncludeAddon` doesn't pick up you can be
+      added manually in your app's `CMakeLists.txt`.
 * Addons can be *global* (from the `openFrameworks/addons` folder) or
   *local* (the addon's folder is located in the root of your ofApp project).
-  * When an addon exists both locally and globally, the local addon is given preference by
-    `ofIncludeAddon`.
+    * When an addon exists both locally and globally, the local addon is given preference by
+      `ofIncludeAddon`.
 
 ## Usage
 
 1. Clone this branch.
 2. Download the OF libraries using the appropriate script.
+   * Windows: Use the VS libraries, MSYS2 is not implemented.
+
+### Building with CLion
+
+I highly recommend using [CLion](https://www.jetbrains.com/clion/) as an IDE!
+
+1. In the openFrameworks root directory, open `CMakeLists.txt` and **open it as a Project**.
+2. Add at least a Debug and a Release profile in the window that appears.
+3. From the targets drop-down menu, select `build_and_install`.
+4. Press the build button.
+5. If you want a Release build, change the config and build once more.
+
+Now we will build the test ofApp:
+
+1. From `tests/cmake/cmakeTest`, open `CMakeLists.txt` and **open it as a Project**.
+7. Again, add a Debug and Release configuration.
+8. Select the Release config, select `cmakeTest` as a target and press the Run button.
 
 ### Building with terminal
 
@@ -73,22 +91,6 @@ cmake --build cmake-build-release --target cmakeTest -j 8
 
 That should build the test app in the `bin` directory.
 
-### Building with CLion
-
-I highly recommend using [CLion](https://www.jetbrains.com/clion/) as an IDE!
-
-1. In the openFrameworks root directory, open `CMakeLists.txt` and **open it as a Project**.
-2. Add at least a Debug and a Release profile in the window that appears.
-3. From the targets drop-down menu, select `build_and_install`.
-4. Press the build button.
-5. If you want a Release build, change the config and build once more.
-
-Now we will build the test ofApp:
-
-1. From `tests/cmake/cmakeTest`, open `CMakeLists.txt` and **open it as a Project**.
-7. Again, add a Debug and Release configuration.
-8. Select the Release config, select `cmakeTest` as a target and press the Run button.
-
 ## Structure
 
 The fork adds the following files:
@@ -98,8 +100,6 @@ The fork adds the following files:
 - A `cmake` folder that contains some helper files.
   `of_macros.cmake` is the most interesting one at the moment.
 - A `tests/cmake` folder, which has tests/examples of the build system.
-
-
 
 ## Disclaimers
 
