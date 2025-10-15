@@ -443,14 +443,12 @@ elseif (OF_TARGET_VS)
     target_compile_definitions(of_static PUBLIC
             WIN32 CURL_STATICLIB URI_STATIC_BUILD _HAS_STREAM_INSERTION_OPERATORS_DELETED_IN_CXX20 _CONSOLE POCO_STATIC CAIRO_WIN32_STATIC_BUILD DISABLE_SOME_FLOATING_POINT OF_NO_FMOD GLM_FORCE_CTOR_INIT GLM_ENABLE_EXPERIMENTAL _UNICODE UNICODE FREEIMAGE_LIB) # GLEW_STATIC
     target_compile_options(of_static PUBLIC
-            $<$<CONFIG:Debug>:/D _DEBUG /GS /TP /external:W3>
-            $<$<CONFIG:Debug>:/Od /ZI>
+            $<$<CONFIG:Debug>:/D _DEBUG /TP /external:W3 /Gy /Gs- /Od /ZI>
             $<$<CONFIG:Release>:/O2 /W1>
             $<$<COMPILE_LANGUAGE:CXX>:/std:c++20>
             $<$<COMPILE_LANGUAGE:C>:/std:c17>
             /WX- /Zc:forScope /Gd /FC /EHsc /nologo /Zc:__cplusplus /Zc:inline /Zc:wchar_t /fp:precise)
-    target_link_options(of_static PUBLIC /MACHINE:X64 /NOLOGO)
-
+#    target_link_options(of_static PUBLIC /MACHINE:X64 /NOLOGO)
 endif ()
 
 
