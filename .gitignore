@@ -80,6 +80,7 @@ tests/**/*.yml
 # XCode 4
 xcuserdata
 *.xcworkspace
+DerivedData
 
 # Code::Blocks
 *.depend
@@ -93,6 +94,8 @@ xcuserdata
 *.ilk
 *.aps
 ipch/
+
+scripts/templates/vs
 
 # Eclipse
 .metadata
@@ -193,4 +196,8 @@ scripts/templates/vs/bin/emptyExample_debug.exe
 scripts/templates/vs2019/emptyExample.vcxproj.user
 libs/openFrameworksCompiled/project/android/build-*/
 
+#tests/*/bin
+#!tests/*/bin/data/
+install/
 
+cmake-build-*/
