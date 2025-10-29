@@ -33,9 +33,11 @@ file(GLOB_RECURSE SRC_GL "${OF_DIRECTORY}/libs/openFrameworks/gl/*.cpp")
 file(GLOB_RECURSE SRC_MATH "${OF_DIRECTORY}/libs/openFrameworks/math/*.cpp")
 set(SRC_SOUND
         ${OF_DIRECTORY}/libs/openFrameworks/sound/ofFmodSoundPlayer.cpp
-        ${OF_DIRECTORY}/libs/openFrameworks/sound/ofOpenALSoundPlayer.cpp
+#        ${OF_DIRECTORY}/libs/openFrameworks/sound/ofOpenALSoundPlayer.cpp
         ${OF_DIRECTORY}/libs/openFrameworks/sound/ofSoundBuffer.cpp
         ${OF_DIRECTORY}/libs/openFrameworks/sound/ofSoundPlayer.cpp
+        ${OF_DIRECTORY}/libs/openFrameworks/sound/ofSoundStream.cpp
+        ${OF_DIRECTORY}/libs/openFrameworks/sound/ofSoundBaseTypes.cpp
 )
 file(GLOB_RECURSE SRC_TYPES "${OF_DIRECTORY}/libs/openFrameworks/types/*.cpp")
 file(GLOB_RECURSE SRC_UTILS "${OF_DIRECTORY}/libs/openFrameworks/utils/*.cpp")
@@ -66,12 +68,13 @@ list(APPEND OF_SRC
 
 if (APPLE)
     list(APPEND OF_SRC
-            ${OF_DIRECTORY}/libs/openFrameworks/sound/ofSoundStream.cpp
             ${OF_DIRECTORY}/libs/openFrameworks/video/ofAVFoundationVideoPlayer.m
             ${OF_DIRECTORY}/libs/openFrameworks/video/ofAVFoundationPlayer.mm
             ${OF_DIRECTORY}/libs/openFrameworks/video/ofAVFoundationGrabber.mm
             ${OF_DIRECTORY}/libs/openFrameworks/sound/ofAVEngineSoundPlayer.h
             ${OF_DIRECTORY}/libs/openFrameworks/sound/ofAVEngineSoundPlayer.mm
+            ${OF_DIRECTORY}/libs/openFrameworks/sound/ofRtAudioSoundStream.cpp
+
     )
 elseif (WIN32)
     list(APPEND OF_SRC
