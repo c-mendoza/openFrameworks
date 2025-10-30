@@ -82,6 +82,8 @@ elseif (WIN32)
             ${OF_DIRECTORY}/libs/openFrameworks/video/ofDirectShowPlayer.cpp
             ${OF_DIRECTORY}/libs/openFrameworks/video/ofMediaFoundationPlayer.cpp
             ${OF_DIRECTORY}/libs/openFrameworks/sound/ofMediaFoundationSoundPlayer.cpp
+            ${OF_DIRECTORY}/libs/openFrameworks/sound/ofRtAudioSoundStream.cpp
+
     )
 endif ()
 
